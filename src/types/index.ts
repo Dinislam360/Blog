@@ -11,6 +11,7 @@ export interface Post {
   slug: string;
   content: string;
   featuredImage?: string;
+  dataAiHint?: string; // For placeholder image generation context
   categoryId: string;
   seoKeywords: string; // Comma-separated
   seoDescription: string;

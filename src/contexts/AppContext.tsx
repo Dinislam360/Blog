@@ -101,11 +101,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addPost = (postData: Omit<Post, 'id' | 'slug' | 'createdAt' | 'updatedAt'>): Post => {
     const newPost: Post = {
-      ...postData,
-      id: String(Date.now() + Math.random()), // Added Math.random() for better uniqueness
+      id: String(Date.now() + Math.random()), // Ensure ID is generated first
       slug: generateSlug(postData.title),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      ...postData, // Spread postData after defaults to allow overriding if needed (though not for these fields)
     };
     setPosts(prevPosts => [newPost, ...prevPosts]);
     return newPost;
@@ -123,7 +123,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const addCategory = (categoryData: Omit<Category, 'id' | 'slug'>): Category => {
     const newCategory: Category = {
       ...categoryData,
-      id: String(Date.now() + Math.random()), // Added Math.random() for better uniqueness
+      id: String(Date.now() + Math.random()), 
       slug: generateSlug(categoryData.name),
     };
     setCategories(prevCategories => [newCategory, ...prevCategories]);

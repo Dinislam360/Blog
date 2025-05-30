@@ -17,12 +17,19 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { generateSEOTitles, type GenerateSEOTitlesInput, type GenerateSEOTitlesOutput } from '@/ai/flows/generate-seo-titles';
 import { SeoSuggestionsModal } from './SeoSuggestionsModal';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Info } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const postSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters long'),
   content: z.string().min(10, 'Content must be at least 10 characters long'),
   featuredImage: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  dataAiHint: z.string().max(50, "AI hint should be concise (max 50 chars).").optional(),
   categoryId: z.string().min(1, 'Category is required'),
   seoKeywords: z.string().optional(),
   seoDescription: z.string().optional(),
@@ -51,6 +58,7 @@ export function PostForm({ post }: PostFormProps) {
       title: post?.title || '',
       content: post?.content || '',
       featuredImage: post?.featuredImage || '',
+      dataAiHint: post?.dataAiHint || '',
       categoryId: post?.categoryId || '',
       seoKeywords: post?.seoKeywords || '',
       seoDescription: post?.seoDescription || '',
@@ -109,7 +117,7 @@ export function PostForm({ post }: PostFormProps) {
   };
 
   return (
-    <>
+    <TooltipProvider>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <Card className="shadow-lg">
           <CardHeader>
@@ -152,9 +160,33 @@ export function PostForm({ post }: PostFormProps) {
           <CardContent className="space-y-6">
             <div>
               <Label htmlFor="featuredImage">Featured Image URL</Label>
-              <Input id="featuredImage" {...register('featuredImage')} placeholder="https://example.com/image.png" className={errors.featuredImage ? 'border-destructive' : ''} />
+              <Input id="featuredImage" {...register('featuredImage')} placeholder="https://placehold.co/800x400.png" className={errors.featuredImage ? 'border-destructive' : ''} />
               {errors.featuredImage && <p className="text-sm text-destructive mt-1">{errors.featuredImage.message}</p>}
             </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Label htmlFor="dataAiHint">AI Image Hint</Label>
+                <Tooltip>
+                  <TooltipTrigger type="button" onClick={(e) => e.preventDefault()}>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-sm">
+                      Provide 1-2 keywords (e.g., "abstract tech", "forest landscape") to guide AI placeholder image generation. Used for `data-ai-hint` attribute.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Input 
+                id="dataAiHint" 
+                {...register('dataAiHint')} 
+                placeholder="e.g., technology abstract, travel landscape" 
+                className={errors.dataAiHint ? 'border-destructive' : ''} 
+              />
+              {errors.dataAiHint && <p className="text-sm text-destructive mt-1">{errors.dataAiHint.message}</p>}
+            </div>
+
 
             <div>
               <Label htmlFor="categoryId">Category</Label>
@@ -217,6 +249,6 @@ export function PostForm({ post }: PostFormProps) {
           onSelectTitle={handleSelectSuggestedTitle}
         />
       )}
-    </>
+    </TooltipProvider>
   );
 }
