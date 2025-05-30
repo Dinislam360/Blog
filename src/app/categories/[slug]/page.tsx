@@ -18,6 +18,8 @@ export default function CategoryPage() {
   }
 
   const postsInCategory = posts.filter((post: Post) => post.categoryId === category.id);
+  // Sort posts in this category by creation date, newest first
+  const sortedPostsInCategory = [...postsInCategory].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -26,9 +28,9 @@ export default function CategoryPage() {
         <header className="mb-8 pb-4 border-b">
           <h1 className="text-4xl font-bold text-primary">Category: {category.name}</h1>
         </header>
-        {postsInCategory.length > 0 ? (
+        {sortedPostsInCategory.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {postsInCategory.map((post: Post) => (
+            {sortedPostsInCategory.map((post: Post) => (
               <PostCard key={post.id} post={post} />
             ))}
           </div>

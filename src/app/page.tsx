@@ -28,12 +28,16 @@ export default function HomePage() {
     )
   }
 
+  // Sort all posts by creation date, newest first
+  const sortedPosts = [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
         {categories.map((category: Category) => {
-          const postsInCategory = posts.filter((post: Post) => post.categoryId === category.id);
+          // Filter from the globally sorted posts
+          const postsInCategory = sortedPosts.filter((post: Post) => post.categoryId === category.id);
           if (postsInCategory.length === 0) {
             return null; // Don't render category if no posts
           }
@@ -46,6 +50,7 @@ export default function HomePage() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Posts are already sorted correctly from sortedPosts */}
                 {postsInCategory.map((post: Post) => (
                   <PostCard key={post.id} post={post} categoryName={category.name} />
                 ))}
