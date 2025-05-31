@@ -45,7 +45,7 @@ export default function HomePage() {
     const postsToShow = featuredPost
       ? sortedPosts.filter(post => post.id !== featuredPost.id)
       : sortedPosts;
-    return postsToShow.slice(0, 12); // Changed from 6 to 12
+    return postsToShow; // Display all remaining posts
   }, [sortedPosts, featuredPost]);
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function HomePage() {
           <div className="h-8 w-1/4 bg-muted rounded mb-6 mt-12"></div>
           {/* Skeleton for Latest Posts grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map(i => ( // Changed from [1,2,3] to show more skeletons
+            {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="bg-card p-4 rounded-lg shadow-md animate-pulse">
                 <div className="h-48 bg-muted rounded mb-4"></div>
                 <div className="h-6 w-3/4 bg-muted rounded mb-2"></div>
@@ -198,7 +198,7 @@ export default function HomePage() {
 function Footer() {
   const { siteSettings, isInitialDataLoaded } = useAppContext();
   const defaultCopyright = `© ${new Date().getFullYear()} ${siteSettings.siteTitle || 'Apex Blogs'}. All rights reserved.`;
-  const defaultTagline = ''; // Removed "Powered by Next.js & ShadCN UI"
+  const defaultTagline = ''; 
 
   const copyrightText = isInitialDataLoaded && siteSettings.footerCopyright ? siteSettings.footerCopyright : defaultCopyright;
   const taglineText = isInitialDataLoaded && siteSettings.footerTagline ? siteSettings.footerTagline : defaultTagline;
@@ -234,3 +234,5 @@ function Footer() {
     </footer>
   );
 }
+
+    
