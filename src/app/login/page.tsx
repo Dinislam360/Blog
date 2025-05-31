@@ -11,8 +11,8 @@ import { Logo } from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@example.com'); // Default for demo
-  const [password, setPassword] = useState('password'); // Default for demo
+  const [email, setEmail] = useState('shuvo7871@outlook.com'); // Default for demo
+  const [password, setPassword] = useState('Ds123456+'); // Default for demo
   const { login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -20,9 +20,9 @@ export default function LoginPage() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     // Mock authentication: in a real app, call an API
-    if (email === 'admin@example.com' && password === 'password') {
+    if (email === 'shuvo7871@outlook.com' && password === 'Ds123456+') {
       login(() => {
-        toast({ title: 'Login Successful', description: 'Welcome back, Admin!' });
+        toast({ title: 'Login Successful', description: 'Welcome back!' });
         router.push('/admin/dashboard');
       });
     } else {
@@ -47,7 +47,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@example.com"
+                placeholder="shuvo7871@outlook.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -58,7 +58,7 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="password"
+                placeholder="Ds123456+"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -70,7 +70,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">
-          <p>Use admin@example.com / password for demo.</p>
+          <p>Use shuvo7871@outlook.com / Ds123456+ for demo.</p>
         </CardFooter>
       </Card>
     </div>
