@@ -64,17 +64,17 @@ export function SettingsForm() {
               <AccordionTrigger className="text-lg font-semibold">Ad Code Insertion</AccordionTrigger>
               <AccordionContent className="space-y-6 pt-4">
                 <div>
-                  <Label htmlFor="adSenseHeader">AdSense Code (Header)</Label>
+                  <Label htmlFor="adSenseHeader" className="mb-1.5">AdSense Code (Header)</Label>
                   <Textarea id="adSenseHeader" {...register('adSenseHeader')} placeholder="Paste your AdSense header code here" rows={3} />
                   <p className="text-xs text-muted-foreground mt-1">Code to be inserted in the &lt;head&gt; section.</p>
                 </div>
                 <div>
-                  <Label htmlFor="adSenseFooter">AdSense Code (Footer)</Label>
+                  <Label htmlFor="adSenseFooter" className="mb-1.5">AdSense Code (Footer)</Label>
                   <Textarea id="adSenseFooter" {...register('adSenseFooter')} placeholder="Paste your AdSense footer code here (e.g., before </body>)" rows={3} />
                    <p className="text-xs text-muted-foreground mt-1">Code to be inserted before the closing &lt;/body&gt; tag.</p>
                 </div>
                 <div>
-                  <Label htmlFor="adSenseSidebar">AdSense Code (Sidebar/In-article)</Label>
+                  <Label htmlFor="adSenseSidebar" className="mb-1.5">AdSense Code (Sidebar/In-article)</Label>
                   <Textarea id="adSenseSidebar" {...register('adSenseSidebar')} placeholder="Paste your AdSense code for sidebar or in-article ads" rows={3} />
                   <p className="text-xs text-muted-foreground mt-1">This code can be manually placed in theme templates or widgets.</p>
                 </div>
@@ -85,12 +85,12 @@ export function SettingsForm() {
               <AccordionTrigger className="text-lg font-semibold">Custom Code Insertion</AccordionTrigger>
               <AccordionContent className="space-y-6 pt-4">
                  <div>
-                  <Label htmlFor="customHeaderCode">Custom Header Code</Label>
+                  <Label htmlFor="customHeaderCode" className="mb-1.5">Custom Header Code</Label>
                   <Textarea id="customHeaderCode" {...register('customHeaderCode')} placeholder="Any other code for the <head> section (e.g., analytics, custom scripts)" rows={4} />
                    <p className="text-xs text-muted-foreground mt-1">Inserted in the &lt;head&gt; section.</p>
                 </div>
                 <div>
-                  <Label htmlFor="customFooterCode">Custom Footer Code</Label>
+                  <Label htmlFor="customFooterCode" className="mb-1.5">Custom Footer Code</Label>
                   <Textarea id="customFooterCode" {...register('customFooterCode')} placeholder="Any other code before </body> (e.g., tracking pixels, chat widgets)" rows={4} />
                   <p className="text-xs text-muted-foreground mt-1">Inserted before the closing &lt;/body&gt; tag.</p>
                 </div>
@@ -101,20 +101,20 @@ export function SettingsForm() {
               <AccordionTrigger className="text-lg font-semibold">Site Verification Codes</AccordionTrigger>
               <AccordionContent className="space-y-6 pt-4">
                 <div>
-                  <Label htmlFor="googleVerification">Google Search Console</Label>
+                  <Label htmlFor="googleVerification" className="mb-1.5">Google Search Console</Label>
                   <Input id="googleVerification" {...register('googleVerification')} placeholder="Paste Google verification meta tag content or ID" />
                   <p className="text-xs text-muted-foreground mt-1">e.g., content value of &lt;meta name="google-site-verification" content="..." /&gt;</p>
                 </div>
                 <div>
-                  <Label htmlFor="bingVerification">Bing Webmaster Tools</Label>
+                  <Label htmlFor="bingVerification" className="mb-1.5">Bing Webmaster Tools</Label>
                   <Input id="bingVerification" {...register('bingVerification')} placeholder="Paste Bing verification meta tag content or ID" />
                 </div>
                 <div>
-                  <Label htmlFor="pinterestVerification">Pinterest Verification</Label>
+                  <Label htmlFor="pinterestVerification" className="mb-1.5">Pinterest Verification</Label>
                   <Input id="pinterestVerification" {...register('pinterestVerification')} placeholder="Paste Pinterest verification meta tag content or ID" />
                 </div>
                 <div>
-                  <Label htmlFor="yandexVerification">Yandex Webmaster</Label>
+                  <Label htmlFor="yandexVerification" className="mb-1.5">Yandex Webmaster</Label>
                   <Input id="yandexVerification" {...register('yandexVerification')} placeholder="Paste Yandex verification meta tag content or ID" />
                 </div>
                  <p className="text-sm text-muted-foreground mt-2">These codes are typically inserted as meta tags in the &lt;head&gt; section of your site for verification purposes.</p>
