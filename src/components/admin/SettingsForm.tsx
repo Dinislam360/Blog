@@ -43,7 +43,7 @@ const settingsSchema = z.object({
 type SettingsFormData = z.infer<typeof settingsSchema>;
 
 const sidebarLogoColorOptions = [
-  { label: "Default (Theme Defined)", value: "" },
+  { label: "Default (Theme Defined)", value: "use-theme-default" }, // Changed value from ""
   { label: "Sidebar Text Color", value: "text-sidebar-foreground" },
   { label: "Sidebar Primary Color", value: "text-sidebar-primary" },
   { label: "Sidebar Primary Text", value: "text-sidebar-primary-foreground" },
@@ -150,7 +150,11 @@ export function SettingsForm() {
                     name="adminSidebarLogoColor"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""} disabled={isSubmitting}>
+                      <Select
+                        onValueChange={(selectedValue) => field.onChange(selectedValue === "use-theme-default" ? "" : selectedValue)}
+                        value={field.value === "" || field.value === undefined ? "use-theme-default" : field.value}
+                        disabled={isSubmitting}
+                      >
                         <SelectTrigger className={errors.adminSidebarLogoColor ? 'border-destructive' : ''}>
                           <SelectValue placeholder="Select a color" />
                         </SelectTrigger>
@@ -287,5 +291,3 @@ export function SettingsForm() {
     </form>
   );
 }
-
-    
