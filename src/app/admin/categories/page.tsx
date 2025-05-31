@@ -11,7 +11,7 @@ import { Edit3, Trash2, PlusCircle, Tags } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription, // Added import
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -21,17 +21,16 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription as AlertDialogDescriptionComponent, // Renamed to avoid conflict if used
+  AlertDialogDescription as AlertDialogDescriptionComponent,
   AlertDialogFooter,
-  AlertDialogHeader as AlertDialogHeaderComponent, // Renamed to avoid conflict if used
-  AlertDialogTitle as AlertDialogTitleComponent, // Renamed to avoid conflict if used
+  AlertDialogHeader as AlertDialogHeaderComponent,
+  AlertDialogTitle as AlertDialogTitleComponent,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-// Note: Deleting categories is not implemented in mock AppContext for simplicity.
 
 export default function AdminCategoriesPage() {
-  const { categories } = useAppContext();
+  const { categories, deleteCategory, posts } = useAppContext(); // Added deleteCategory and posts
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined);
   const { toast } = useToast();
@@ -52,13 +51,28 @@ export default function AdminCategoriesPage() {
   };
   
   const handleDelete = (categoryId: string) => {
-    // In a real app, check if category is in use, then call API to delete.
-    console.log("Attempting to delete category (mock):", categoryId);
-    toast({
-      title: "Delete Action (Mock)",
-      description: `Category deletion for ID ${categoryId} is not fully implemented in this mock setup.`,
-      variant: "default"
-    });
+    const categoryToDelete = categories.find(cat => cat.id === categoryId);
+    if (!categoryToDelete) {
+      toast({ title: "Error", description: "Category not found.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      deleteCategory(categoryId); // This will throw an error if category is in use
+      toast({
+        title: "Category Deleted",
+        description: `Category "${categoryToDelete.name}" has been successfully deleted.`,
+        variant: "default"
+      });
+    } catch (error: any) {
+      console.error("Error deleting category:", error);
+      toast({
+        title: "Error Deleting Category",
+        description: error.message || "Something went wrong while trying to delete the category.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
   };
 
 
@@ -102,8 +116,7 @@ export default function AdminCategoriesPage() {
               </TableHeader>
               <TableBody>
                 {categories.map((category) => {
-                  // Mock post count
-                  const postCount = useAppContext().posts.filter(p => p.categoryId === category.id).length;
+                  const postCount = posts.filter(p => p.categoryId === category.id).length;
                   return (
                     <TableRow key={category.id}>
                       <TableCell className="font-medium">{category.name}</TableCell>
@@ -123,8 +136,8 @@ export default function AdminCategoriesPage() {
                             <AlertDialogHeaderComponent>
                               <AlertDialogTitleComponent>Are you sure?</AlertDialogTitleComponent>
                               <AlertDialogDescriptionComponent>
-                                This action cannot be undone. This will permanently delete the category.
-                                (Note: Deletion is mocked in this demo.)
+                                This action cannot be undone. This will permanently delete the category
+                                "{category.name}". If this category is in use by any posts, deletion will be prevented.
                               </AlertDialogDescriptionComponent>
                             </AlertDialogHeaderComponent>
                             <AlertDialogFooter>

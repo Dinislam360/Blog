@@ -18,6 +18,7 @@ interface AppContextType {
   getPostBySlug: (slug: string) => Post | undefined;
   addCategory: (category: Omit<Category, 'id' | 'slug'>) => Category;
   updateCategory: (category: Category) => void;
+  deleteCategory: (categoryId: string) => void; // Added deleteCategory
   getCategoryById: (id: string) => Category | undefined;
   getCategoryBySlug: (slug: string) => Category | undefined;
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
@@ -31,10 +32,10 @@ const CATEGORIES_STORAGE_KEY = 'apex_blogs_categories_v2';
 const SETTINGS_STORAGE_KEY = 'apex_blogs_settings_v2';
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [posts, setPosts] = useState<Post[]>([]); // Initialize as empty, will be populated by loadFromLocalStorage
-  const [categories, setCategories] = useState<Category[]>([]); // Initialize as empty
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => ({ // Initialize with a safe default structure
-    ...mockSiteSettings, // Start with mock to ensure all keys exist
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => ({
+    ...mockSiteSettings,
     socialLinks: mockSiteSettings.socialLinks
       ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
       : [],
@@ -57,11 +58,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (storedPosts) {
           loadedPosts = JSON.parse(storedPosts);
         }
-        // Removed localStorage.setItem from else block for posts
       } catch (error) {
         console.warn("Error reading posts from localStorage, using mock data as fallback:", error);
-        // loadedPosts remains the initial mock copy
-        // Removed localStorage.setItem from catch block for posts
       }
 
       try {
@@ -69,11 +67,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (storedCategories) {
           loadedCategories = JSON.parse(storedCategories);
         }
-        // Removed localStorage.setItem from else block for categories
       } catch (error) {
         console.warn("Error reading categories from localStorage, using mock data as fallback:", error);
-        // loadedCategories remains the initial mock copy
-        // Removed localStorage.setItem from catch block for categories
       }
 
       try {
@@ -81,25 +76,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (storedSettings) {
           const parsedSettings = JSON.parse(storedSettings);
           loadedSettings = {
-            ...mockSiteSettings, // Start with all keys from mock
-            ...parsedSettings,   // Override with stored values
+            ...mockSiteSettings,
+            ...parsedSettings,
             socialLinks: parsedSettings.socialLinks
               ? parsedSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
               : (mockSiteSettings.socialLinks ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) : [])
           };
         }
-        // Removed localStorage.setItem from else block for settings
       } catch (error) {
         console.warn("Error reading site settings from localStorage, using mock data as fallback:", error);
-        // loadedSettings remains the initial mock copy
-        // Removed localStorage.setItem from catch block for settings
       }
     }
 
     setPosts(loadedPosts);
     setCategories(loadedCategories);
     setSiteSettings(loadedSettings);
-    setIsInitialDataLoaded(true); // Signal that initial data is ready
+    setIsInitialDataLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -178,6 +170,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const deleteCategory = (categoryId: string) => {
+    const isCategoryInUse = posts.some(post => post.categoryId === categoryId);
+    if (isCategoryInUse) {
+      throw new Error("This category is in use by one or more posts. Please reassign or delete those posts first.");
+    }
+    setCategories(prevCategories => prevCategories.filter(c => c.id !== categoryId));
+  };
+
   const getCategoryById = (id: string) => categories.find(c => c.id === id);
   const getCategoryBySlug = (slug: string) => categories.find(c => c.slug === slug);
 
@@ -204,6 +204,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         getPostBySlug,
         addCategory,
         updateCategory,
+        deleteCategory, // Added deleteCategory
         getCategoryById,
         getCategoryBySlug,
         updateSiteSettings,
