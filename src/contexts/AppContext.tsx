@@ -31,13 +31,12 @@ const CATEGORIES_STORAGE_KEY = 'apex_blogs_categories_v2';
 const SETTINGS_STORAGE_KEY = 'apex_blogs_settings_v2';
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  // Initialize state with copies of mock data
-  const [posts, setPosts] = useState<Post[]>(() => [...mockPosts.map(p => ({...p}))]);
-  const [categories, setCategories] = useState<Category[]>(() => [...mockCategories.map(c => ({...c}))]);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => ({
-    ...mockSiteSettings,
-    socialLinks: mockSiteSettings.socialLinks 
-      ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) 
+  const [posts, setPosts] = useState<Post[]>([]); // Initialize as empty, will be populated by loadFromLocalStorage
+  const [categories, setCategories] = useState<Category[]>([]); // Initialize as empty
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => ({ // Initialize with a safe default structure
+    ...mockSiteSettings, // Start with mock to ensure all keys exist
+    socialLinks: mockSiteSettings.socialLinks
+      ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
       : [],
   }));
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
@@ -46,65 +45,62 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let loadedPosts = [...mockPosts.map(p => ({...p}))];
     let loadedCategories = [...mockCategories.map(c => ({...c}))];
     let loadedSettings = {
-      ...mockSiteSettings, // Start with all keys from mock, including new ones like adminSidebarLogoColor
-      socialLinks: mockSiteSettings.socialLinks 
+      ...mockSiteSettings,
+      socialLinks: mockSiteSettings.socialLinks
         ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
         : [],
     };
 
-    if (typeof window !== 'undefined') { // Ensure localStorage is available
+    if (typeof window !== 'undefined') {
       try {
         const storedPosts = localStorage.getItem(POSTS_STORAGE_KEY);
         if (storedPosts) {
           loadedPosts = JSON.parse(storedPosts);
-        } else {
-          localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(loadedPosts)); 
         }
+        // Removed localStorage.setItem from else block for posts
       } catch (error) {
-        console.warn("Error reading/priming posts from localStorage:", error);
-        loadedPosts = [...mockPosts.map(p => ({...p}))]; 
-        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(loadedPosts));
+        console.warn("Error reading posts from localStorage, using mock data as fallback:", error);
+        // loadedPosts remains the initial mock copy
+        // Removed localStorage.setItem from catch block for posts
       }
 
       try {
         const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
         if (storedCategories) {
           loadedCategories = JSON.parse(storedCategories);
-        } else {
-          localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(loadedCategories));
         }
+        // Removed localStorage.setItem from else block for categories
       } catch (error) {
-        console.warn("Error reading/priming categories from localStorage:", error);
-        loadedCategories = [...mockCategories.map(c => ({...c}))];
-        localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(loadedCategories));
+        console.warn("Error reading categories from localStorage, using mock data as fallback:", error);
+        // loadedCategories remains the initial mock copy
+        // Removed localStorage.setItem from catch block for categories
       }
 
       try {
         const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
         if (storedSettings) {
           const parsedSettings = JSON.parse(storedSettings);
-          loadedSettings = { 
-            ...mockSiteSettings, // Start with all keys from mock to ensure new fields are present
-            ...parsedSettings, // Override with stored values
-            socialLinks: parsedSettings.socialLinks // Ensure socialLinks from storage is used if present
-              ? parsedSettings.socialLinks.map((link: SocialLink) => ({ ...link })) 
-              : (mockSiteSettings.socialLinks ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) : []) 
+          loadedSettings = {
+            ...mockSiteSettings, // Start with all keys from mock
+            ...parsedSettings,   // Override with stored values
+            socialLinks: parsedSettings.socialLinks
+              ? parsedSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
+              : (mockSiteSettings.socialLinks ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) : [])
           };
-        } else {
-          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(loadedSettings));
         }
+        // Removed localStorage.setItem from else block for settings
       } catch (error) {
-        console.warn("Error reading/priming site settings from localStorage:", error);
-        // loadedSettings remains the initialized mock copy
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(loadedSettings));
+        console.warn("Error reading site settings from localStorage, using mock data as fallback:", error);
+        // loadedSettings remains the initial mock copy
+        // Removed localStorage.setItem from catch block for settings
       }
     }
 
     setPosts(loadedPosts);
     setCategories(loadedCategories);
     setSiteSettings(loadedSettings);
-    setIsInitialDataLoaded(true);
-  }, []); 
+    setIsInitialDataLoaded(true); // Signal that initial data is ready
+  }, []);
 
   useEffect(() => {
     loadFromLocalStorage();
@@ -186,12 +182,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const getCategoryBySlug = (slug: string) => categories.find(c => c.slug === slug);
 
   const updateSiteSettings = (newSettings: Partial<SiteSettings>) => {
-    setSiteSettings(prevSettings => ({ 
-      ...prevSettings, 
+    setSiteSettings(prevSettings => ({
+      ...prevSettings,
       ...newSettings,
-      socialLinks: newSettings.socialLinks 
-        ? newSettings.socialLinks.map(link => ({...link})) 
-        : (prevSettings.socialLinks ? prevSettings.socialLinks.map(link => ({...link})) : []) 
+      socialLinks: newSettings.socialLinks
+        ? newSettings.socialLinks.map(link => ({...link}))
+        : (prevSettings.socialLinks ? prevSettings.socialLinks.map(link => ({...link})) : [])
     }));
   };
 
