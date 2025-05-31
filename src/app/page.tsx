@@ -1,14 +1,19 @@
 
 "use client";
+import { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { PostCard } from '@/components/PostCard';
 import { useAppContext } from '@/contexts/AppContext';
 import type { Post, Category, SocialLink } from '@/types';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Twitter, Github, Linkedin, Facebook, Instagram, Youtube, ExternalLink } from 'lucide-react'; // Add more as needed
+import { Card, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ArrowRight, CalendarDays, Twitter, Github, Linkedin, Facebook, Instagram, Youtube, ExternalLink } from 'lucide-react';
+import { formatDate, getCategoryName } from '@/lib/utils';
 
-// Helper to get appropriate Lucide icon
+// Helper to get appropriate Lucide icon (for Footer)
 const getSocialIcon = (platform: string) => {
   const lowerPlatform = platform.toLowerCase();
   if (lowerPlatform.includes('twitter')) return <Twitter className="h-5 w-5" />;
@@ -17,37 +22,90 @@ const getSocialIcon = (platform: string) => {
   if (lowerPlatform.includes('facebook')) return <Facebook className="h-5 w-5" />;
   if (lowerPlatform.includes('instagram')) return <Instagram className="h-5 w-5" />;
   if (lowerPlatform.includes('youtube')) return <Youtube className="h-5 w-5" />;
-  return <ExternalLink className="h-5 w-5" />; // Default icon
+  return <ExternalLink className="h-5 w-5" />;
 };
 
 
 export default function HomePage() {
-  const { posts, categories, isInitialDataLoaded } = useAppContext();
+  const { posts, categories, siteSettings, isInitialDataLoaded } = useAppContext();
+  const [featuredPostExcerpt, setFeaturedPostExcerpt] = useState('');
+
+  const sortedPosts = useMemo(() =>
+    [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [posts]
+  );
+
+  const featuredPost = useMemo(() =>
+    sortedPosts.find(post => post.featuredImage),
+    [sortedPosts]
+  );
+
+  const latestPosts = useMemo(() => {
+    const postsToShow = featuredPost
+      ? sortedPosts.filter(post => post.id !== featuredPost.id)
+      : sortedPosts;
+    return postsToShow.slice(0, 6);
+  }, [sortedPosts, featuredPost]);
+
+  useEffect(() => {
+    if (featuredPost?.content) {
+      if (typeof window !== 'undefined') { // Ensure DOMParser is used client-side
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(featuredPost.content, 'text/html');
+        const textContent = doc.body.textContent || "";
+        setFeaturedPostExcerpt(textContent.substring(0, 180) + (textContent.length > 180 ? '...' : ''));
+      }
+    } else {
+      setFeaturedPostExcerpt('');
+    }
+  }, [featuredPost]);
 
   if (!isInitialDataLoaded) {
-     return (
+    return (
       <>
         <Navbar />
         <main className="container mx-auto px-4 py-8">
-          <div className="text-center py-20">
-            <div className="h-10 w-1/2 bg-muted rounded animate-pulse mx-auto mb-4"></div>
-            <div className="h-6 w-3/4 bg-muted rounded animate-pulse mx-auto mb-8"></div>
-            <div className="h-12 w-40 bg-primary rounded animate-pulse mx-auto"></div>
+          {/* Skeleton for Featured Post */}
+          <div className="mb-12 p-4 sm:p-6 bg-card rounded-lg shadow-xl animate-pulse">
+            <div className="md:flex">
+              <div className="md:w-1/2 h-64 md:min-h-[300px] bg-muted rounded-md mb-4 md:mb-0 md:mr-6"></div>
+              <div className="md:w-1/2 flex flex-col justify-center">
+                <div className="h-8 w-3/4 bg-muted rounded mb-4"></div> {/* Title */}
+                <div className="h-4 w-1/2 bg-muted rounded mb-2"></div> {/* Date/Category */}
+                <div className="h-4 w-full bg-muted rounded mb-1"></div> {/* Excerpt line 1 */}
+                <div className="h-4 w-full bg-muted rounded mb-1"></div> {/* Excerpt line 2 */}
+                <div className="h-4 w-5/6 bg-muted rounded mb-6"></div> {/* Excerpt line 3 */}
+                <div className="h-12 w-36 bg-primary rounded"></div> {/* Button */}
+              </div>
+            </div>
+          </div>
+          {/* Skeleton for Latest Posts title */}
+          <div className="h-8 w-1/4 bg-muted rounded mb-6 mt-12"></div>
+          {/* Skeleton for Latest Posts grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-card p-4 rounded-lg shadow-md animate-pulse">
+                <div className="h-48 bg-muted rounded mb-4"></div>
+                <div className="h-6 w-3/4 bg-muted rounded mb-2"></div>
+                <div className="h-4 w-1/2 bg-muted rounded mb-4"></div>
+                <div className="h-10 w-full bg-muted rounded"></div>
+              </div>
+            ))}
           </div>
         </main>
         <Footer />
       </>
-    )
+    );
   }
 
-  if (!posts.length || !categories.length) {
+  if (!posts.length) {
     return (
       <>
         <Navbar />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center py-20">
-            <h1 className="text-4xl font-bold mb-4">Welcome to Apex Blogs</h1>
-            <p className="text-muted-foreground text-lg mb-8">No posts available yet. Start by adding some content in the admin panel!</p>
+            <h1 className="text-4xl font-bold mb-4">{siteSettings.siteTitle || 'Welcome to Our Blog'}</h1>
+            <p className="text-muted-foreground text-lg mb-8">No posts available yet. Check back soon or create some in the admin panel!</p>
             <Button asChild size="lg">
               <Link href="/admin/posts/new">Create First Post</Link>
             </Button>
@@ -55,55 +113,95 @@ export default function HomePage() {
         </main>
         <Footer />
       </>
-    )
+    );
   }
-
-  // Sort all posts by creation date, newest first
-  const sortedPosts = [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
-        {categories.map((category: Category) => {
-          // Filter from the globally sorted posts
-          const postsInCategory = sortedPosts.filter((post: Post) => post.categoryId === category.id);
-          if (postsInCategory.length === 0) {
-            return null; // Don't render category if no posts
-          }
-          return (
-            <section key={category.id} className="mb-12">
-              <div className="flex justify-between items-center mb-6 pb-2 border-b">
-                <h2 className="text-3xl font-semibold text-primary">{category.name}</h2>
-                <Button variant="link" asChild>
-                  <Link href={`/categories/${category.slug}`}>View all in {category.name}</Link>
-                </Button>
+        {/* Featured Post Section */}
+        {featuredPost && (
+          <section className="mb-12">
+            <h2 className="text-3xl font-semibold text-primary mb-6 pb-2 border-b">Featured Post</h2>
+            <Card className="overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 group bg-card">
+              <div className="md:flex">
+                {featuredPost.featuredImage && (
+                  <div className="md:w-1/2 relative h-64 sm:h-80 md:h-auto md:min-h-[350px] overflow-hidden">
+                    <Image
+                      src={featuredPost.featuredImage}
+                      alt={featuredPost.title}
+                      layout="fill"
+                      objectFit="cover"
+                      className="transition-transform duration-500 group-hover:scale-105"
+                      priority
+                      data-ai-hint={featuredPost.dataAiHint || "featured story"}
+                    />
+                  </div>
+                )}
+                <div className={`p-6 md:p-8 flex flex-col justify-center ${featuredPost.featuredImage ? 'md:w-1/2' : 'w-full'}`}>
+                  <CardTitle className="text-2xl lg:text-3xl font-bold leading-tight mb-3">
+                    <Link href={`/posts/${featuredPost.slug}`} className="hover:text-primary transition-colors">
+                      {featuredPost.title}
+                    </Link>
+                  </CardTitle>
+                  <div className="text-sm text-muted-foreground mb-4 flex items-center flex-wrap gap-x-3 gap-y-1">
+                    <span className="flex items-center">
+                      <CalendarDays className="mr-1.5 h-4 w-4" />
+                      {formatDate(featuredPost.createdAt)}
+                    </span>
+                    {categories.find(c => c.id === featuredPost.categoryId) && (
+                       <Badge variant="secondary" className="capitalize">{getCategoryName(featuredPost.categoryId, categories)}</Badge>
+                    )}
+                  </div>
+                  {featuredPostExcerpt && (
+                    <p className="text-muted-foreground mb-6 text-base leading-relaxed line-clamp-4">
+                      {featuredPostExcerpt}
+                    </p>
+                  )}
+                  <Button variant="default" size="lg" asChild className="self-start mt-auto">
+                    <Link href={`/posts/${featuredPost.slug}`}>
+                      Read More <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {/* Posts are already sorted correctly from sortedPosts */}
-                {postsInCategory.map((post: Post) => (
-                  <PostCard key={post.id} post={post} categoryName={category.name} />
-                ))}
-              </div>
-            </section>
-          );
-        })}
+            </Card>
+          </section>
+        )}
+
+        {/* Latest Posts Section */}
+        {(latestPosts.length > 0 || (!featuredPost && posts.length > 0)) && (
+          <section className={featuredPost ? "mt-16" : ""}>
+             <h2 className="text-3xl font-semibold text-primary mb-6 pb-2 border-b">
+              {posts.length > 0 ? (featuredPost ? 'More Posts' : 'Latest Posts') : ''}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {latestPosts.map((post: Post) => (
+                <PostCard 
+                  key={post.id} 
+                  post={post} 
+                  categoryName={getCategoryName(post.categoryId, categories)} 
+                />
+              ))}
+            </div>
+          </section>
+        )}
+        
       </main>
       <Footer />
     </div>
   );
 }
 
-
 function Footer() {
   const { siteSettings, isInitialDataLoaded } = useAppContext();
-  const defaultCopyright = `© ${new Date().getFullYear()} Apex Blogs. All rights reserved.`;
+  const defaultCopyright = `© ${new Date().getFullYear()} ${siteSettings.siteTitle || 'Apex Blogs'}. All rights reserved.`;
   const defaultTagline = 'Powered by Next.js & ShadCN UI';
 
   const copyrightText = isInitialDataLoaded && siteSettings.footerCopyright ? siteSettings.footerCopyright : defaultCopyright;
   const taglineText = isInitialDataLoaded && siteSettings.footerTagline ? siteSettings.footerTagline : defaultTagline;
   const socialLinks = isInitialDataLoaded ? (siteSettings.socialLinks || []) : [];
-
 
   return (
     <footer className="py-8 border-t bg-muted/50">
