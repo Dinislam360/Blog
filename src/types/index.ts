@@ -30,8 +30,9 @@ export interface SiteSettings {
   siteTitle?: string;
   logoUrl?: string;
   faviconUrl?: string; // URL for the favicon
+  adminSidebarLogoColor?: string; // Tailwind CSS class for admin sidebar logo color
   footerCopyright?: string;
-  footerTagline?: string;
+  // footerTagline?: string; // Removed as per previous request
   socialLinks?: SocialLink[];
   adSenseHeader?: string;
   adSenseFooter?: string;

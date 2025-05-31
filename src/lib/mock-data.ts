@@ -1,3 +1,4 @@
+
 import type { Post, Category, SiteSettings } from '@/types';
 import { generateSlug } from './utils';
 
@@ -73,8 +74,9 @@ export const mockSiteSettings: SiteSettings = {
   siteTitle: 'Apex Blogs',
   logoUrl: '', // Default to empty, so Feather icon shows
   faviconUrl: '/favicon.ico', // Default favicon path
+  adminSidebarLogoColor: '', // Default to empty, sidebar will use its own default
   footerCopyright: `© ${new Date().getFullYear()} Apex Blogs. All rights reserved.`,
-  footerTagline: 'Powered by Next.js & ShadCN UI',
+  // footerTagline: '', // Removed as per previous request
   socialLinks: [
     { id: '1', platform: 'Twitter', url: 'https://twitter.com/yourprofile' },
     { id: '2', platform: 'GitHub', url: 'https://github.com/yourprofile' },

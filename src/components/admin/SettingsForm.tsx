@@ -25,8 +25,9 @@ const settingsSchema = z.object({
   siteTitle: z.string().optional(),
   logoUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
   faviconUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
+  adminSidebarLogoColor: z.string().optional(), // Can be empty or a Tailwind class
   footerCopyright: z.string().optional(),
-  footerTagline: z.string().optional(),
+  // footerTagline: z.string().optional(), // Removed as per previous request
   socialLinks: z.array(socialLinkSchema).optional(),
   adSenseHeader: z.string().optional(),
   adSenseFooter: z.string().optional(),
@@ -48,16 +49,15 @@ export function SettingsForm() {
 
   const { control, register, handleSubmit, reset, formState: { errors } } = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
-    defaultValues: siteSettings, // Initialize with context data
+    defaultValues: siteSettings, 
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "socialLinks",
   });
 
   useEffect(() => {
-    // When context data is loaded or changes, reset the form with the new values
     if (isInitialDataLoaded) {
       reset(siteSettings);
     }
@@ -113,7 +113,7 @@ export function SettingsForm() {
           <Accordion type="multiple" defaultValue={['identity', 'footer', 'social', 'ads', 'verification', 'custom-code']} className="w-full">
             
             <AccordionItem value="identity">
-              <AccordionTrigger className="text-lg font-semibold">Site Identity</AccordionTrigger>
+              <AccordionTrigger className="text-lg font-semibold">Site Identity & Appearance</AccordionTrigger>
               <AccordionContent className="space-y-6 pt-4">
                 <div>
                   <Label htmlFor="siteTitle" className="mb-1.5 block">Site Title</Label>
@@ -130,6 +130,12 @@ export function SettingsForm() {
                   <Label htmlFor="faviconUrl" className="mb-1.5 block">Favicon URL</Label>
                   <Input id="faviconUrl" {...register('faviconUrl')} placeholder="/favicon.ico or https://example.com/favicon.png" />
                   {errors.faviconUrl && <p className="text-sm text-destructive mt-1">{errors.faviconUrl.message}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="adminSidebarLogoColor" className="mb-1.5 block">Admin Sidebar Logo Color</Label>
+                  <Input id="adminSidebarLogoColor" {...register('adminSidebarLogoColor')} placeholder="e.g., text-blue-500" />
+                  {errors.adminSidebarLogoColor && <p className="text-sm text-destructive mt-1">{errors.adminSidebarLogoColor.message}</p>}
+                  <p className="text-xs text-muted-foreground mt-1">Enter a Tailwind CSS class (e.g., text-red-500, text-sidebar-foreground). Leave blank for default.</p>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -251,5 +257,3 @@ export function SettingsForm() {
     </form>
   );
 }
-
-    

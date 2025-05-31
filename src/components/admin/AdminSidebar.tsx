@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthProvider';
 import type { NavItem } from '@/types';
 import { LayoutDashboard, FileText, Tags, Settings, LogOut, ExternalLink } from 'lucide-react';
+import { useAppContext } from '@/contexts/AppContext'; // Import useAppContext
 
 const adminNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
@@ -19,11 +20,14 @@ const adminNavItems: NavItem[] = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const { logout } = useAuth();
+  const { siteSettings } = useAppContext(); // Get siteSettings
+
+  const sidebarLogoColor = siteSettings.adminSidebarLogoColor || 'text-sidebar-primary-foreground';
 
   return (
     <aside className="w-64 h-screen bg-sidebar text-sidebar-foreground flex flex-col fixed left-0 top-0 shadow-lg z-40">
       <div className="p-6 border-b border-sidebar-border">
-        <Logo color="text-sidebar-primary-foreground" textSize="text-2xl" />
+        <Logo color={sidebarLogoColor} textSize="text-2xl" />
       </div>
       <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
         {adminNavItems.map((item) => (

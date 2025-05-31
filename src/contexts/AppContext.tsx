@@ -46,7 +46,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let loadedPosts = [...mockPosts.map(p => ({...p}))];
     let loadedCategories = [...mockCategories.map(c => ({...c}))];
     let loadedSettings = {
-      ...mockSiteSettings,
+      ...mockSiteSettings, // Start with all keys from mock, including new ones like adminSidebarLogoColor
       socialLinks: mockSiteSettings.socialLinks 
         ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
         : [],
@@ -84,11 +84,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (storedSettings) {
           const parsedSettings = JSON.parse(storedSettings);
           loadedSettings = { 
-            ...mockSiteSettings, // Start with all keys from mock
+            ...mockSiteSettings, // Start with all keys from mock to ensure new fields are present
             ...parsedSettings, // Override with stored values
             socialLinks: parsedSettings.socialLinks // Ensure socialLinks from storage is used if present
               ? parsedSettings.socialLinks.map((link: SocialLink) => ({ ...link })) 
-              : (mockSiteSettings.socialLinks ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) : []) // fallback for socialLinks
+              : (mockSiteSettings.socialLinks ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) : []) 
           };
         } else {
           localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(loadedSettings));
@@ -189,7 +189,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setSiteSettings(prevSettings => ({ 
       ...prevSettings, 
       ...newSettings,
-      // Ensure socialLinks from newSettings is a new array of new objects if provided
       socialLinks: newSettings.socialLinks 
         ? newSettings.socialLinks.map(link => ({...link})) 
         : (prevSettings.socialLinks ? prevSettings.socialLinks.map(link => ({...link})) : []) 
@@ -227,4 +226,3 @@ export const useAppContext = () => {
   }
   return context;
 };
-
