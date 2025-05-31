@@ -11,13 +11,46 @@ export function SiteMetadata() {
   const defaultTitle = 'Apex Blogs - Your Content Hub';
   const pageTitle = isInitialDataLoaded && siteSettings.siteTitle ? siteSettings.siteTitle : defaultTitle;
 
+  // Helper function to manage injected HTML/script elements
+  const manageInjectedHtml = (
+    targetElement: HTMLElement,
+    htmlString: string | undefined,
+    elementId: string,
+    elementType: string = 'div' // Use 'div' as a generic container
+  ) => {
+    if (typeof document === 'undefined') return; // Ensure document is available
+
+    let container = document.getElementById(elementId);
+
+    if (htmlString && htmlString.trim() !== '') {
+      if (!container) {
+        container = document.createElement(elementType);
+        container.id = elementId;
+        targetElement.appendChild(container);
+      }
+      // Scripts might not execute if just set via innerHTML directly in some cases,
+      // but for generic code snippets (including style, meta, or simple divs), this is okay.
+      // For robust script execution, one might need to parse script tags and recreate them.
+      // However, for AdSense and typical custom codes, direct innerHTML is often sufficient or intended.
+      if (container.innerHTML !== htmlString) { // Avoid unnecessary DOM manipulation
+        container.innerHTML = htmlString;
+      }
+    } else {
+      if (container) {
+        targetElement.removeChild(container);
+      }
+    }
+  };
+
+
   useEffect(() => {
-    if (isInitialDataLoaded) {
+    if (isInitialDataLoaded && typeof document !== 'undefined') {
       document.title = pageTitle;
       
       const head = document.head;
-      if (!head) {
-        console.warn("document.head not found when trying to set metadata.");
+      const body = document.body;
+      if (!head || !body) {
+        console.warn("document.head or document.body not found when trying to set metadata.");
         return;
       }
 
@@ -35,9 +68,15 @@ export function SiteMetadata() {
             faviconLink.href = currentFaviconUrl;
         }
       } else {
-        if (faviconLink) {
+        // If faviconUrl is empty, rely on browser default or manually placed favicon.ico
+        // Do not remove if it exists, as it might be a static one.
+        // Only manage favicons that are dynamically set by this URL.
+        // If you want to enforce removal, uncomment the next block.
+        /*
+        if (faviconLink && faviconLink.href.startsWith('blob:')) { // Or a more specific check if needed
           head.removeChild(faviconLink);
         }
+        */
       }
 
       // Site Verification Meta Tags Management
@@ -51,9 +90,10 @@ export function SiteMetadata() {
             tag.name = name;
             head.appendChild(tag);
           }
-          tag.content = content;
+          if (tag.content !== content) {
+            tag.content = content;
+          }
         } else {
-          // If content is empty or undefined, remove the tag if it exists
           if (existingTag) {
             head.removeChild(existingTag);
           }
@@ -61,27 +101,18 @@ export function SiteMetadata() {
       };
 
       createOrUpdateMetaTag('google-site-verification', siteSettings.googleVerification);
-      createOrUpdateMetaTag('msvalidate.01', siteSettings.bingVerification); // Common name for Bing
-      createOrUpdateMetaTag('p:domain_verify', siteSettings.pinterestVerification); // Common name for Pinterest
+      createOrUpdateMetaTag('msvalidate.01', siteSettings.bingVerification); 
+      createOrUpdateMetaTag('p:domain_verify', siteSettings.pinterestVerification); 
       createOrUpdateMetaTag('yandex-verification', siteSettings.yandexVerification);
 
-      // Handling for AdSense Header and Custom Header Code
-      // These are injected via _document.tsx or a custom App component in a real setup,
-      // or by directly manipulating the head if absolutely necessary for client-side rendering.
-      // For simplicity, if customHeaderCode or adSenseHeader are defined, we'll append them.
-      // This simple append might lead to duplicates if settings change without a page reload.
-      // A more robust solution would involve IDs or markers to manage these script blocks.
-
-      // Note: The AdSense and Custom Code injection logic previously here was simplified.
-      // The current PRD asks for tools to *insert* them, which the SettingsForm provides.
-      // Automatic injection of arbitrary script tags here is complex to manage idempotently.
-      // This component will focus on title, favicon, and specific meta tags.
-      // Arbitrary script injection is better handled by a different mechanism if required dynamically,
-      // or often placed directly in _document.js or layout components for scripts needed on every page.
+      // Inject AdSense and Custom Codes
+      manageInjectedHtml(head, siteSettings.adSenseHeader, 'apex-adsense-header');
+      manageInjectedHtml(head, siteSettings.customHeaderCode, 'apex-custom-header');
+      manageInjectedHtml(body, siteSettings.adSenseFooter, 'apex-adsense-footer');
+      manageInjectedHtml(body, siteSettings.customFooterCode, 'apex-custom-footer');
 
     }
   }, [pageTitle, siteSettings, isInitialDataLoaded]);
 
-  // This component doesn't render anything itself, it just manages head elements
   return null; 
 }
