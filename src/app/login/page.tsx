@@ -50,6 +50,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                placeholder=""
               />
             </div>
             <div className="space-y-2">
@@ -60,6 +61,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                placeholder=""
               />
             </div>
             <Button type="submit" className="w-full">
@@ -68,7 +70,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">
-          <p>Use shuvo7871@outlook.com / Ds123456+ for demo.</p>
+          
         </CardFooter>
       </Card>
     </div>
