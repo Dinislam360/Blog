@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, LogIn } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile'; // Assuming use-mobile.tsx exists
+import { useIsMobile } from '@/hooks/use-mobile'; 
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
@@ -28,7 +28,7 @@ export function Navbar() {
 
   if (isMobile) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <Logo iconSize={24} textSize="text-xl" isMobile={true} />
           <Sheet>
@@ -69,7 +69,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <Logo />
         <NavigationMenu>

@@ -19,7 +19,7 @@ export function PostCard({ post, categoryName }: PostCardProps) {
   return (
     <Card className="flex flex-col h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
       {post.featuredImage && (
-        <div className="relative w-full h-48">
+        <div className="relative w-full h-56"> {/* Increased height from h-48 */}
           <Image
             src={post.featuredImage}
             alt={post.title}
