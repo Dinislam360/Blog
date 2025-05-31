@@ -4,7 +4,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Post, Category, SiteSettings, SocialLink } from '@/types';
-import { mockPosts, mockCategories, mockSiteSettings } from '@/lib/mock-data';
+import initialDbData from '@/lib/database.json'; // Import from the new JSON file
 import { generateSlug } from '@/lib/utils';
 
 interface AppContextType {
@@ -18,7 +18,7 @@ interface AppContextType {
   getPostBySlug: (slug: string) => Post | undefined;
   addCategory: (category: Omit<Category, 'id' | 'slug'>) => Category;
   updateCategory: (category: Category) => void;
-  deleteCategory: (categoryId: string) => void; // Added deleteCategory
+  deleteCategory: (categoryId: string) => void;
   getCategoryById: (id: string) => Category | undefined;
   getCategoryBySlug: (slug: string) => Category | undefined;
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
@@ -31,26 +31,29 @@ const POSTS_STORAGE_KEY = 'apex_blogs_posts_v2';
 const CATEGORIES_STORAGE_KEY = 'apex_blogs_categories_v2';
 const SETTINGS_STORAGE_KEY = 'apex_blogs_settings_v2';
 
+// Helper to ensure all parts of siteSettings have defaults from the JSON if not in loadedSettings
+const mergeSiteSettings = (loadedSettings: Partial<SiteSettings>): SiteSettings => {
+  const defaultSettings = initialDbData.siteSettings;
+  return {
+    ...defaultSettings,
+    ...loadedSettings,
+    socialLinks: loadedSettings.socialLinks 
+      ? loadedSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
+      : defaultSettings.socialLinks.map((link: SocialLink) => ({ ...link })),
+  };
+};
+
+
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => ({
-    ...mockSiteSettings,
-    socialLinks: mockSiteSettings.socialLinks
-      ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
-      : [],
-  }));
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(mergeSiteSettings({})); // Initialize with merged defaults
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   const loadFromLocalStorage = useCallback(() => {
-    let loadedPosts = [...mockPosts.map(p => ({...p}))];
-    let loadedCategories = [...mockCategories.map(c => ({...c}))];
-    let loadedSettings = {
-      ...mockSiteSettings,
-      socialLinks: mockSiteSettings.socialLinks
-        ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
-        : [],
-    };
+    let loadedPosts: Post[] = initialDbData.posts.map(p => ({...p}));
+    let loadedCategories: Category[] = initialDbData.categories.map(c => ({...c}));
+    let loadedSettings: SiteSettings = mergeSiteSettings({}); // Start with full default structure
 
     if (typeof window !== 'undefined') {
       try {
@@ -75,13 +78,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
         if (storedSettings) {
           const parsedSettings = JSON.parse(storedSettings);
-          loadedSettings = {
-            ...mockSiteSettings,
-            ...parsedSettings,
-            socialLinks: parsedSettings.socialLinks
-              ? parsedSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
-              : (mockSiteSettings.socialLinks ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) : [])
-          };
+          // Ensure all fields are present by merging with defaults from JSON
+          loadedSettings = mergeSiteSettings(parsedSettings);
         }
       } catch (error) {
         console.warn("Error reading site settings from localStorage, using mock data as fallback:", error);
@@ -182,13 +180,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const getCategoryBySlug = (slug: string) => categories.find(c => c.slug === slug);
 
   const updateSiteSettings = (newSettings: Partial<SiteSettings>) => {
-    setSiteSettings(prevSettings => ({
-      ...prevSettings,
-      ...newSettings,
-      socialLinks: newSettings.socialLinks
-        ? newSettings.socialLinks.map(link => ({...link}))
-        : (prevSettings.socialLinks ? prevSettings.socialLinks.map(link => ({...link})) : [])
-    }));
+    setSiteSettings(prevSettings => mergeSiteSettings({...prevSettings, ...newSettings}));
   };
 
   return (
@@ -204,7 +196,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         getPostBySlug,
         addCategory,
         updateCategory,
-        deleteCategory, // Added deleteCategory
+        deleteCategory,
         getCategoryById,
         getCategoryBySlug,
         updateSiteSettings,
@@ -223,3 +215,4 @@ export const useAppContext = () => {
   }
   return context;
 };
+
