@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit3, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, FileText } from 'lucide-react';
 import { formatDate, getCategoryName } from '@/lib/utils';
 import {
   AlertDialog,
@@ -20,20 +20,27 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-// Note: Deleting posts is not implemented in mock AppContext for simplicity. This UI part is for demonstration.
 
 export default function AdminPostsPage() {
-  const { posts, categories } = useAppContext();
+  const { posts, categories, deletePost } = useAppContext();
   const { toast } = useToast();
 
   const handleDelete = (postId: string) => {
-    // In a real app, call an API to delete. Here, just show a toast.
-    console.log("Attempting to delete post (mock):", postId);
-    toast({
-      title: "Delete Action (Mock)",
-      description: `Post deletion for ID ${postId} is not fully implemented in this mock setup.`,
-      variant: "default"
-    });
+    try {
+      deletePost(postId);
+      toast({
+        title: "Post Deleted",
+        description: "The post has been successfully deleted.",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast({
+        title: "Error Deleting Post",
+        description: "Something went wrong while trying to delete the post.",
+        variant: "destructive"
+      });
+    }
   };
 
 
@@ -93,7 +100,6 @@ export default function AdminPostsPage() {
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will permanently delete the post.
-                              (Note: Deletion is mocked in this demo.)
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
