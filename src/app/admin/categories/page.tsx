@@ -11,6 +11,7 @@ import { Edit3, Trash2, PlusCircle, Tags } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription, // Added import
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -20,10 +21,10 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
+  AlertDialogDescription as AlertDialogDescriptionComponent, // Renamed to avoid conflict if used
   AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogHeader as AlertDialogHeaderComponent, // Renamed to avoid conflict if used
+  AlertDialogTitle as AlertDialogTitleComponent, // Renamed to avoid conflict if used
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -72,6 +73,12 @@ export default function AdminCategoriesPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[525px]">
+            <DialogHeader>
+              <DialogTitle>{editingCategory ? 'Edit Category' : 'Create New Category'}</DialogTitle>
+              <DialogDescription>
+                {editingCategory ? `Update the details for "${editingCategory.name}".` : 'Add a new category for your posts.'}
+              </DialogDescription>
+            </DialogHeader>
             <CategoryForm category={editingCategory} onFormSubmit={handleFormSubmit} />
           </DialogContent>
         </Dialog>
@@ -113,13 +120,13 @@ export default function AdminCategoriesPage() {
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
+                            <AlertDialogHeaderComponent>
+                              <AlertDialogTitleComponent>Are you sure?</AlertDialogTitleComponent>
+                              <AlertDialogDescriptionComponent>
                                 This action cannot be undone. This will permanently delete the category.
                                 (Note: Deletion is mocked in this demo.)
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
+                              </AlertDialogDescriptionComponent>
+                            </AlertDialogHeaderComponent>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleDelete(category.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
