@@ -11,8 +11,8 @@ import { Logo } from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('shuvo7871@outlook.com'); // Default for demo
-  const [password, setPassword] = useState('Ds123456+'); // Default for demo
+  const [email, setEmail] = useState(''); // Set to empty string
+  const [password, setPassword] = useState(''); // Set to empty string
   const { login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
