@@ -22,9 +22,15 @@ export function SiteMetadata() {
       if (!link) {
         link = document.createElement('link');
         link.rel = 'icon';
-        document.getElementsByTagName('head')[0].appendChild(link);
+        if (document.head) { // Ensure document.head exists
+            document.head.appendChild(link);
+        } else {
+            console.warn("document.head not found when trying to set favicon.");
+        }
       }
-      link.href = faviconUrl;
+      if (link) { // Ensure link was created/found before setting href
+        link.href = faviconUrl;
+      }
     }
   }, [pageTitle, faviconUrl, isInitialDataLoaded]);
 

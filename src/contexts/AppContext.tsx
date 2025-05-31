@@ -21,80 +21,83 @@ interface AppContextType {
   getCategoryById: (id: string) => Category | undefined;
   getCategoryBySlug: (slug: string) => Category | undefined;
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
-  isInitialDataLoaded: boolean; 
+  isInitialDataLoaded: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const POSTS_STORAGE_KEY = 'apex_blogs_posts_v2'; // increment version if schema changes significantly
+const POSTS_STORAGE_KEY = 'apex_blogs_posts_v2';
 const CATEGORIES_STORAGE_KEY = 'apex_blogs_categories_v2';
 const SETTINGS_STORAGE_KEY = 'apex_blogs_settings_v2';
 
-
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(mockSiteSettings); // Initialize with mock as base
+  const [posts, setPosts] = useState<Post[]>(mockPosts); // Initial state for SSR and first client render
+  const [categories, setCategories] = useState<Category[]>(mockCategories); // Initial state
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(mockSiteSettings); // Initial state
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   const loadFromLocalStorage = useCallback(() => {
-    let loadedPosts = mockPosts;
-    let loadedCategories = mockCategories;
-    let loadedSettings = { ...mockSiteSettings }; // Start with mock, then overlay stored
+    let loadedPosts = [...mockPosts]; // Start with a copy of mock data
+    let loadedCategories = [...mockCategories];
+    let loadedSettings = { ...mockSiteSettings };
 
-    try {
-      const storedPosts = localStorage.getItem(POSTS_STORAGE_KEY);
-      if (storedPosts) {
-        loadedPosts = JSON.parse(storedPosts);
+    if (typeof window !== 'undefined') { // Ensure localStorage is available
+      try {
+        const storedPosts = localStorage.getItem(POSTS_STORAGE_KEY);
+        if (storedPosts) {
+          loadedPosts = JSON.parse(storedPosts);
+        } else {
+          localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(mockPosts)); // Prime LS if empty
+        }
+      } catch (error) {
+        console.warn("Error reading/priming posts from localStorage:", error);
+        loadedPosts = [...mockPosts]; // Fallback to mock
+        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(mockPosts)); // Ensure LS has valid mock data
       }
-    } catch (error) {
-      console.warn("Error reading posts from localStorage:", error);
-      // Fallback to mock if parsing fails
-      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(mockPosts));
+
+      try {
+        const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+        if (storedCategories) {
+          loadedCategories = JSON.parse(storedCategories);
+        } else {
+          localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(mockCategories));
+        }
+      } catch (error) {
+        console.warn("Error reading/priming categories from localStorage:", error);
+        loadedCategories = [...mockCategories];
+        localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(mockCategories));
+      }
+
+      try {
+        const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (storedSettings) {
+          // Merge with mock settings to ensure all keys exist, preferring stored values
+          loadedSettings = { ...mockSiteSettings, ...JSON.parse(storedSettings) };
+        } else {
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(mockSiteSettings));
+        }
+      } catch (error) {
+        console.warn("Error reading/priming site settings from localStorage:", error);
+        loadedSettings = { ...mockSiteSettings }; // Fallback to mock
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(mockSiteSettings));
+      }
     }
+
     setPosts(loadedPosts);
-
-    try {
-      const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-      if (storedCategories) {
-        loadedCategories = JSON.parse(storedCategories);
-      }
-    } catch (error) {
-      console.warn("Error reading categories from localStorage:", error);
-      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(mockCategories));
-    }
     setCategories(loadedCategories);
-    
-    try {
-      const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (storedSettings) {
-        // Merge stored settings with mock settings to ensure new fields have defaults
-        loadedSettings = { ...mockSiteSettings, ...JSON.parse(storedSettings) };
-      }
-    } catch (error) {
-      console.warn("Error reading site settings from localStorage:", error);
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(mockSiteSettings));
-    }
     setSiteSettings(loadedSettings);
-
-    setIsInitialDataLoaded(true); 
-  }, []);
-
+    setIsInitialDataLoaded(true);
+  }, []); // Empty dependency array as mockData imports are constant
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Initialize with mock data first to prevent hydration mismatch
-      setPosts(mockPosts);
-      setCategories(mockCategories);
-      setSiteSettings(mockSiteSettings);
-      // Then, load from localStorage after the initial client render
-      loadFromLocalStorage();
-    }
+    // This effect runs *after* the first client render.
+    // The initial render has already used the mockData from useState defaults.
+    // Now, load from localStorage.
+    loadFromLocalStorage();
   }, [loadFromLocalStorage]);
 
-
   useEffect(() => {
-    if (typeof window !== 'undefined' && isInitialDataLoaded) { 
+    if (isInitialDataLoaded && typeof window !== 'undefined') {
       try {
         localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
       } catch (error) {
@@ -104,7 +107,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [posts, isInitialDataLoaded]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && isInitialDataLoaded) { 
+    if (isInitialDataLoaded && typeof window !== 'undefined') {
       try {
         localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
       } catch (error) {
@@ -114,7 +117,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [categories, isInitialDataLoaded]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && isInitialDataLoaded) { 
+    if (isInitialDataLoaded && typeof window !== 'undefined') {
       try {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(siteSettings));
       } catch (error) {
@@ -123,14 +126,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [siteSettings, isInitialDataLoaded]);
 
-
   const addPost = (postData: Omit<Post, 'id' | 'slug' | 'createdAt' | 'updatedAt'>): Post => {
     const newPost: Post = {
-      id: String(Date.now() + Math.random()), 
+      id: String(Date.now() + Math.random()),
       slug: generateSlug(postData.title),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      ...postData, 
+      ...postData,
     };
     setPosts(prevPosts => [newPost, ...prevPosts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     return newPost;
@@ -153,7 +155,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const addCategory = (categoryData: Omit<Category, 'id' | 'slug'>): Category => {
     const newCategory: Category = {
       ...categoryData,
-      id: String(Date.now() + Math.random()), 
+      id: String(Date.now() + Math.random()),
       slug: generateSlug(categoryData.name),
     };
     setCategories(prevCategories => [newCategory, ...prevCategories]);
@@ -165,7 +167,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       prevCategories.map(c => (c.id === updatedCategory.id ? { ...updatedCategory, slug: generateSlug(updatedCategory.name) } : c))
     );
   };
-  
+
   const getCategoryById = (id: string) => categories.find(c => c.id === id);
   const getCategoryBySlug = (slug: string) => categories.find(c => c.slug === slug);
 
