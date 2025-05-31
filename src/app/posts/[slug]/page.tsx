@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarDays, Tag, Twitter, Github, Linkedin, Facebook, Instagram, Youtube, ExternalLink } from 'lucide-react';
 import { formatDate, getCategoryName } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import type { SocialLink } from '@/types'; // Added SocialLink
+import type { SocialLink } from '@/types'; 
 import Link from 'next/link';
+import React from 'react'; // Added for React.cloneElement
 
 // Helper to get appropriate Lucide icon
 const getSocialIcon = (platform: string) => {
@@ -121,36 +122,39 @@ export default function PostPage() {
 
 function Footer() {
   const { siteSettings, isInitialDataLoaded } = useAppContext();
-  const defaultCopyright = `© ${new Date().getFullYear()} Apex Blogs. All rights reserved.`;
+  const defaultCopyright = `© ${new Date().getFullYear()} ${siteSettings.siteTitle || 'Apex Blogs'}. All rights reserved.`;
   const defaultTagline = 'Powered by Next.js & ShadCN UI';
 
   const copyrightText = isInitialDataLoaded && siteSettings.footerCopyright ? siteSettings.footerCopyright : defaultCopyright;
   const taglineText = isInitialDataLoaded && siteSettings.footerTagline ? siteSettings.footerTagline : defaultTagline;
   const socialLinks = isInitialDataLoaded ? (siteSettings.socialLinks || []) : [];
 
-
   return (
-    <footer className="py-8 border-t bg-muted/50">
-      <div className="container mx-auto px-4 text-center text-muted-foreground">
-        <p>{copyrightText}</p>
-        {taglineText && <p className="text-sm mt-1">{taglineText}</p>}
-         {socialLinks.length > 0 && (
-          <div className="flex justify-center space-x-4 mt-4">
-            {socialLinks.map((link: SocialLink) => (
-              <a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={link.platform}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                {getSocialIcon(link.platform)}
-                <span className="sr-only">{link.platform}</span>
-              </a>
-            ))}
+    <footer className="bg-card text-card-foreground border-t border-border/60 shadow-inner mt-16">
+      <div className="container mx-auto px-6 py-12">
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="text-center md:text-left">
+            <p className="font-semibold text-lg">{copyrightText}</p>
+            {taglineText && <p className="text-sm mt-1 opacity-80">{taglineText}</p>}
           </div>
-        )}
+          {socialLinks.length > 0 && (
+            <div className="flex justify-center md:justify-end space-x-5">
+              {socialLinks.map((link: SocialLink) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={link.platform}
+                  className="text-card-foreground/70 hover:text-primary transition-colors duration-300"
+                >
+                  {React.cloneElement(getSocialIcon(link.platform), { className: "h-6 w-6" })}
+                  <span className="sr-only">{link.platform}</span>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </footer>
   );
