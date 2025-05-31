@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { Post, Category, SiteSettings } from '@/types';
+import type { Post, Category, SiteSettings, SocialLink } from '@/types';
 import { mockPosts, mockCategories, mockSiteSettings } from '@/lib/mock-data';
 import { generateSlug } from '@/lib/utils';
 
@@ -31,15 +31,26 @@ const CATEGORIES_STORAGE_KEY = 'apex_blogs_categories_v2';
 const SETTINGS_STORAGE_KEY = 'apex_blogs_settings_v2';
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [posts, setPosts] = useState<Post[]>(mockPosts); // Initial state for SSR and first client render
-  const [categories, setCategories] = useState<Category[]>(mockCategories); // Initial state
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(mockSiteSettings); // Initial state
+  // Initialize state with copies of mock data
+  const [posts, setPosts] = useState<Post[]>(() => [...mockPosts.map(p => ({...p}))]);
+  const [categories, setCategories] = useState<Category[]>(() => [...mockCategories.map(c => ({...c}))]);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => ({
+    ...mockSiteSettings,
+    socialLinks: mockSiteSettings.socialLinks 
+      ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) 
+      : [],
+  }));
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   const loadFromLocalStorage = useCallback(() => {
-    let loadedPosts = [...mockPosts]; // Start with a copy of mock data
-    let loadedCategories = [...mockCategories];
-    let loadedSettings = { ...mockSiteSettings };
+    let loadedPosts = [...mockPosts.map(p => ({...p}))];
+    let loadedCategories = [...mockCategories.map(c => ({...c}))];
+    let loadedSettings = {
+      ...mockSiteSettings,
+      socialLinks: mockSiteSettings.socialLinks 
+        ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link }))
+        : [],
+    };
 
     if (typeof window !== 'undefined') { // Ensure localStorage is available
       try {
@@ -47,12 +58,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (storedPosts) {
           loadedPosts = JSON.parse(storedPosts);
         } else {
-          localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(mockPosts)); // Prime LS if empty
+          localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(loadedPosts)); 
         }
       } catch (error) {
         console.warn("Error reading/priming posts from localStorage:", error);
-        loadedPosts = [...mockPosts]; // Fallback to mock
-        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(mockPosts)); // Ensure LS has valid mock data
+        loadedPosts = [...mockPosts.map(p => ({...p}))]; 
+        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(loadedPosts));
       }
 
       try {
@@ -60,26 +71,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (storedCategories) {
           loadedCategories = JSON.parse(storedCategories);
         } else {
-          localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(mockCategories));
+          localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(loadedCategories));
         }
       } catch (error) {
         console.warn("Error reading/priming categories from localStorage:", error);
-        loadedCategories = [...mockCategories];
-        localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(mockCategories));
+        loadedCategories = [...mockCategories.map(c => ({...c}))];
+        localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(loadedCategories));
       }
 
       try {
         const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
         if (storedSettings) {
-          // Merge with mock settings to ensure all keys exist, preferring stored values
-          loadedSettings = { ...mockSiteSettings, ...JSON.parse(storedSettings) };
+          const parsedSettings = JSON.parse(storedSettings);
+          loadedSettings = { 
+            ...mockSiteSettings, // Start with all keys from mock
+            ...parsedSettings, // Override with stored values
+            socialLinks: parsedSettings.socialLinks // Ensure socialLinks from storage is used if present
+              ? parsedSettings.socialLinks.map((link: SocialLink) => ({ ...link })) 
+              : (mockSiteSettings.socialLinks ? mockSiteSettings.socialLinks.map((link: SocialLink) => ({ ...link })) : []) // fallback for socialLinks
+          };
         } else {
-          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(mockSiteSettings));
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(loadedSettings));
         }
       } catch (error) {
         console.warn("Error reading/priming site settings from localStorage:", error);
-        loadedSettings = { ...mockSiteSettings }; // Fallback to mock
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(mockSiteSettings));
+        // loadedSettings remains the initialized mock copy
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(loadedSettings));
       }
     }
 
@@ -87,12 +104,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCategories(loadedCategories);
     setSiteSettings(loadedSettings);
     setIsInitialDataLoaded(true);
-  }, []); // Empty dependency array as mockData imports are constant
+  }, []); 
 
   useEffect(() => {
-    // This effect runs *after* the first client render.
-    // The initial render has already used the mockData from useState defaults.
-    // Now, load from localStorage.
     loadFromLocalStorage();
   }, [loadFromLocalStorage]);
 
@@ -158,7 +172,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       id: String(Date.now() + Math.random()),
       slug: generateSlug(categoryData.name),
     };
-    setCategories(prevCategories => [newCategory, ...prevCategories]);
+    setCategories(prevCategories => [{...newCategory}, ...prevCategories]);
     return newCategory;
   };
 
@@ -172,7 +186,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const getCategoryBySlug = (slug: string) => categories.find(c => c.slug === slug);
 
   const updateSiteSettings = (newSettings: Partial<SiteSettings>) => {
-    setSiteSettings(prevSettings => ({ ...prevSettings, ...newSettings }));
+    setSiteSettings(prevSettings => ({ 
+      ...prevSettings, 
+      ...newSettings,
+      // Ensure socialLinks from newSettings is a new array of new objects if provided
+      socialLinks: newSettings.socialLinks 
+        ? newSettings.socialLinks.map(link => ({...link})) 
+        : (prevSettings.socialLinks ? prevSettings.socialLinks.map(link => ({...link})) : []) 
+    }));
   };
 
   return (
@@ -206,3 +227,4 @@ export const useAppContext = () => {
   }
   return context;
 };
+
