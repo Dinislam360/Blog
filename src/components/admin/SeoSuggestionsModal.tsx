@@ -19,8 +19,12 @@ interface SeoSuggestionsModalProps {
   onClose: () => void;
   titles: string[];
   headings: string[];
+  suggestedSEODescription: string;
+  suggestedSEOKeywords: string[];
   onSelectTitle?: (title: string) => void;
   onSelectHeading?: (heading: string) => void; // Could be useful if headings are part of a structured editor
+  onSelectSEODescription?: (description: string) => void;
+  onSelectSEOKeywords?: (keywords: string[]) => void;
 }
 
 export function SeoSuggestionsModal({
@@ -28,14 +32,19 @@ export function SeoSuggestionsModal({
   onClose,
   titles,
   headings,
+  suggestedSEODescription,
+  suggestedSEOKeywords,
   onSelectTitle,
+  onSelectSEODescription,
+  onSelectSEOKeywords,
 }: SeoSuggestionsModalProps) {
   const { toast } = useToast();
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
 
-  const handleCopy = (text: string, type: 'title' | 'heading', index: number) => {
-    navigator.clipboard.writeText(text).then(() => {
-      const key = `${type}-${index}`;
+  const handleCopy = (text: string | string[], type: 'title' | 'heading' | 'description' | 'keywords', index?: number) => {
+    const textToCopy = Array.isArray(text) ? text.join(', ') : text;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      const key = index !== undefined ? `${type}-${index}` : type;
       setCopiedStates(prev => ({ ...prev, [key]: true }));
       toast({ title: "Copied to clipboard!", description: `${type.charAt(0).toUpperCase() + type.slice(1)} copied.` });
       setTimeout(() => {
@@ -53,14 +62,14 @@ export function SeoSuggestionsModal({
         <DialogHeader>
           <DialogTitle>AI SEO Suggestions</DialogTitle>
           <DialogDescription>
-            Here are some AI-generated alternative titles and headings to improve your post's SEO and readability.
+            Here are AI-generated suggestions to improve your post's SEO.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh] p-1">
+        <ScrollArea className="max-h-[70vh] p-1">
           <div className="grid gap-6 py-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Alternative Titles</h3>
-              {titles.length > 0 ? (
+            {titles && titles.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Alternative Titles</h3>
                 <ul className="space-y-2">
                   {titles.map((title, index) => (
                     <li key={`title-${index}`} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
@@ -78,13 +87,12 @@ export function SeoSuggestionsModal({
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-muted-foreground">No alternative titles generated.</p>
-              )}
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Alternative Headings</h3>
-              {headings.length > 0 ? (
+              </div>
+            )}
+            
+            {headings && headings.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3 mt-4">Alternative Headings</h3>
                 <ul className="space-y-2">
                   {headings.map((heading, index) => (
                     <li key={`heading-${index}`} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
@@ -95,10 +103,47 @@ export function SeoSuggestionsModal({
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-muted-foreground">No alternative headings generated.</p>
-              )}
-            </div>
+              </div>
+            )}
+
+            {suggestedSEODescription && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3 mt-4">Suggested SEO Description</h3>
+                <div className="p-3 bg-muted/50 rounded-md">
+                  <p className="flex-1 mr-2 mb-2">{suggestedSEODescription}</p>
+                  <div className="flex items-center gap-2 justify-end">
+                      {onSelectSEODescription && (
+                        <Button variant="outline" size="sm" onClick={() => onSelectSEODescription(suggestedSEODescription)}>
+                          Use Description
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" onClick={() => handleCopy(suggestedSEODescription, 'description')} title="Copy description">
+                        {copiedStates['description'] ? <Check className="h-4 w-4 text-green-500" /> : <Clipboard className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                </div>
+              </div>
+            )}
+
+            {suggestedSEOKeywords && suggestedSEOKeywords.length > 0 && (
+               <div>
+                <h3 className="text-lg font-semibold mb-3 mt-4">Suggested SEO Keywords</h3>
+                 <div className="p-3 bg-muted/50 rounded-md">
+                  <p className="flex-1 mr-2 mb-2">{suggestedSEOKeywords.join(', ')}</p>
+                  <div className="flex items-center gap-2 justify-end">
+                    {onSelectSEOKeywords && (
+                      <Button variant="outline" size="sm" onClick={() => onSelectSEOKeywords(suggestedSEOKeywords)}>
+                        Use Keywords
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => handleCopy(suggestedSEOKeywords, 'keywords')} title="Copy keywords">
+                       {copiedStates['keywords'] ? <Check className="h-4 w-4 text-green-500" /> : <Clipboard className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         </ScrollArea>
         <DialogFooter>

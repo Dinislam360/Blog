@@ -23,7 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { RichTextEditor } from './RichTextEditor'; // ADDED
+import { RichTextEditor } from './RichTextEditor'; 
 import { Textarea } from '@/components/ui/textarea';
 
 
@@ -94,19 +94,16 @@ export function PostForm({ post }: PostFormProps) {
   };
 
   const handleGenerateSeo = async () => {
-    const content = watch('content'); // This will be HTML content
-    // For AI, we might want to strip HTML or use a library to get text content
-    // For simplicity, we'll send HTML for now, or we can use editor.getText() if we had access to editor instance
-    if (!content || content.length < 50) { // Check HTML length, might need adjustment
+    const content = watch('content'); 
+    if (!content || content.length < 50) { 
       toast({ title: "Content too short", description: "Please write at least 50 characters of content to generate SEO suggestions.", variant: "destructive" });
       return;
     }
     setIsGeneratingSeo(true);
     try {
-      // Consider stripping HTML from 'content' before sending to AI if it expects plain text
       const plainTextContent = new DOMParser().parseFromString(content, "text/html").body.textContent || "";
       if (plainTextContent.length < 50) {
-        toast({ title: "Text Content too short", description: "Please write at least 50 characters of actual text content.", variant: "destructive" });
+        toast({ title: "Text Content too short", description: "Please write at least 50 characters of actual text content to generate SEO suggestions.", variant: "destructive" });
         setIsGeneratingSeo(false);
         return;
       }
@@ -115,7 +112,7 @@ export function PostForm({ post }: PostFormProps) {
       setSeoSuggestions(result);
       setIsSeoModalOpen(true);
     } catch (error) {
-      console.error("Error generating SEO titles:", error);
+      console.error("Error generating SEO suggestions:", error);
       toast({ title: "AI Error", description: "Could not generate SEO suggestions. Please try again.", variant: "destructive" });
     } finally {
       setIsGeneratingSeo(false);
@@ -124,8 +121,21 @@ export function PostForm({ post }: PostFormProps) {
   
   const handleSelectSuggestedTitle = (suggestedTitle: string) => {
     setValue('title', suggestedTitle);
-    setIsSeoModalOpen(false);
+    setIsSeoModalOpen(false); // Or keep open if user might select more
   };
+
+  const handleSelectSuggestedSEODescription = (description: string) => {
+    setValue('seoDescription', description);
+    // Optionally close modal or indicate success
+    toast({ title: "SEO Description Updated", description: "The SEO description field has been updated with the suggestion." });
+  };
+
+  const handleSelectSuggestedSEOKeywords = (keywords: string[]) => {
+    setValue('seoKeywords', keywords.join(', '));
+    // Optionally close modal or indicate success
+    toast({ title: "SEO Keywords Updated", description: "The SEO keywords field has been updated with the suggestions." });
+  };
+
 
   return (
     <TooltipProvider>
@@ -182,8 +192,10 @@ export function PostForm({ post }: PostFormProps) {
               <div className="flex items-center gap-2 mb-1">
                 <Label htmlFor="dataAiHint">AI Image Hint</Label>
                 <Tooltip>
-                  <TooltipTrigger type="button" onClick={(e) => e.preventDefault()}>
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                  <TooltipTrigger asChild>
+                     <Button type="button" variant="ghost" size="icon" className="h-5 w-5 p-0" onClick={(e) => e.preventDefault()}>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs">
                     <p className="text-sm">
@@ -260,9 +272,14 @@ export function PostForm({ post }: PostFormProps) {
           onClose={() => setIsSeoModalOpen(false)}
           titles={seoSuggestions.alternativeTitles}
           headings={seoSuggestions.alternativeHeadings}
+          suggestedSEODescription={seoSuggestions.suggestedSEODescription}
+          suggestedSEOKeywords={seoSuggestions.suggestedSEOKeywords}
           onSelectTitle={handleSelectSuggestedTitle}
+          onSelectSEODescription={handleSelectSuggestedSEODescription}
+          onSelectSEOKeywords={handleSelectSuggestedSEOKeywords}
         />
       )}
     </TooltipProvider>
   );
 }
+
