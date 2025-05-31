@@ -43,7 +43,7 @@ const settingsSchema = z.object({
 type SettingsFormData = z.infer<typeof settingsSchema>;
 
 const sidebarLogoColorOptions = [
-  { label: "Default (Theme Defined)", value: "use-theme-default" }, // Changed value from ""
+  { label: "Default (Theme Defined)", value: "use-theme-default" },
   { label: "Sidebar Text Color", value: "text-sidebar-foreground" },
   { label: "Sidebar Primary Color", value: "text-sidebar-primary" },
   { label: "Sidebar Primary Text", value: "text-sidebar-primary-foreground" },
@@ -261,22 +261,25 @@ export function SettingsForm() {
               <AccordionContent className="space-y-6 pt-4">
                 <div>
                   <Label htmlFor="googleVerification" className="mb-1.5 block">Google Search Console</Label>
-                  <Input id="googleVerification" {...register('googleVerification')} placeholder="Paste Google verification meta tag content or ID" />
-                  <p className="text-xs text-muted-foreground mt-1">e.g., content value of &lt;meta name="google-site-verification" content="..." /&gt;</p>
+                  <Input id="googleVerification" {...register('googleVerification')} placeholder="Paste content attribute of meta tag" />
+                  <p className="text-xs text-muted-foreground mt-1">Enter the value of the `content` attribute from Google's meta tag.</p>
                 </div>
                 <div>
                   <Label htmlFor="bingVerification" className="mb-1.5 block">Bing Webmaster Tools</Label>
-                  <Input id="bingVerification" {...register('bingVerification')} placeholder="Paste Bing verification meta tag content or ID" />
+                  <Input id="bingVerification" {...register('bingVerification')} placeholder="Paste content attribute of meta tag" />
+                   <p className="text-xs text-muted-foreground mt-1">Enter the value of the `content` attribute from Bing's meta tag (msvalidate.01).</p>
                 </div>
                 <div>
                   <Label htmlFor="pinterestVerification" className="mb-1.5 block">Pinterest Verification</Label>
-                  <Input id="pinterestVerification" {...register('pinterestVerification')} placeholder="Paste Pinterest verification meta tag content or ID" />
+                  <Input id="pinterestVerification" {...register('pinterestVerification')} placeholder="Paste content attribute of meta tag" />
+                   <p className="text-xs text-muted-foreground mt-1">Enter the value of the `content` attribute from Pinterest's meta tag (p:domain_verify).</p>
                 </div>
                 <div>
                   <Label htmlFor="yandexVerification" className="mb-1.5 block">Yandex Webmaster</Label>
-                  <Input id="yandexVerification" {...register('yandexVerification')} placeholder="Paste Yandex verification meta tag content or ID" />
+                  <Input id="yandexVerification" {...register('yandexVerification')} placeholder="Paste content attribute of meta tag" />
+                  <p className="text-xs text-muted-foreground mt-1">Enter the value of the `content` attribute from Yandex's meta tag.</p>
                 </div>
-                 <p className="text-sm text-muted-foreground mt-2">These codes are typically inserted as meta tags in the &lt;head&gt; section of your site for verification purposes.</p>
+                 <p className="text-sm text-muted-foreground mt-2">These codes will be inserted as meta tags in the &lt;head&gt; section of your site.</p>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
