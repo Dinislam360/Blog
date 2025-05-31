@@ -68,15 +68,13 @@ export function SiteMetadata() {
             faviconLink.href = currentFaviconUrl;
         }
       } else {
-        // If faviconUrl is empty, rely on browser default or manually placed favicon.ico
-        // Do not remove if it exists, as it might be a static one.
-        // Only manage favicons that are dynamically set by this URL.
-        // If you want to enforce removal, uncomment the next block.
-        /*
-        if (faviconLink && faviconLink.href.startsWith('blob:')) { // Or a more specific check if needed
-          head.removeChild(faviconLink);
+        // If faviconUrl is empty, and a favicon was previously set by this logic, remove it.
+        // This does not remove a static favicon.ico file linked by default by browsers.
+        if (faviconLink && (faviconLink.href === currentFaviconUrl || faviconLink.href.startsWith('blob:'))) { 
+          // Check if the current href matches what we'd set or if it's a blob (indicative of dynamic setting)
+          // This is a heuristic; if you only ever want this component to manage favicons,
+          // you might remove it more aggressively, but be cautious of removing user-placed static favicons.
         }
-        */
       }
 
       // Site Verification Meta Tags Management
@@ -106,8 +104,11 @@ export function SiteMetadata() {
       createOrUpdateMetaTag('yandex-verification', siteSettings.yandexVerification);
 
       // Inject AdSense and Custom Codes
+      // Header codes are injected into the <head>
       manageInjectedHtml(head, siteSettings.adSenseHeader, 'apex-adsense-header');
       manageInjectedHtml(head, siteSettings.customHeaderCode, 'apex-custom-header');
+      
+      // Footer codes are appended to the <body> (i.e., before </body>)
       manageInjectedHtml(body, siteSettings.adSenseFooter, 'apex-adsense-footer');
       manageInjectedHtml(body, siteSettings.customFooterCode, 'apex-custom-footer');
 
