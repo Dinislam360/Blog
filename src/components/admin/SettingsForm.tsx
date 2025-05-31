@@ -14,6 +14,7 @@ import type { SiteSettings, SocialLink } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Trash2, GripVertical } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const socialLinkSchema = z.object({
   id: z.string(),
@@ -25,9 +26,8 @@ const settingsSchema = z.object({
   siteTitle: z.string().optional(),
   logoUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
   faviconUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
-  adminSidebarLogoColor: z.string().optional(), // Can be empty or a Tailwind class
+  adminSidebarLogoColor: z.string().optional(),
   footerCopyright: z.string().optional(),
-  // footerTagline: z.string().optional(), // Removed as per previous request
   socialLinks: z.array(socialLinkSchema).optional(),
   adSenseHeader: z.string().optional(),
   adSenseFooter: z.string().optional(),
@@ -41,6 +41,19 @@ const settingsSchema = z.object({
 });
 
 type SettingsFormData = z.infer<typeof settingsSchema>;
+
+const sidebarLogoColorOptions = [
+  { label: "Default (Theme Defined)", value: "" },
+  { label: "Sidebar Text Color", value: "text-sidebar-foreground" },
+  { label: "Sidebar Primary Color", value: "text-sidebar-primary" },
+  { label: "Sidebar Primary Text", value: "text-sidebar-primary-foreground" },
+  { label: "Sidebar Accent Color", value: "text-sidebar-accent" },
+  { label: "Sidebar Accent Text", value: "text-sidebar-accent-foreground" },
+  { label: "White", value: "text-white" },
+  { label: "Black", value: "text-black" },
+  { label: "Light Gray (Slate 400)", value: "text-slate-400" },
+  { label: "Dark Gray (Slate 600)", value: "text-slate-600" },
+];
 
 export function SettingsForm() {
   const { siteSettings, updateSiteSettings, isInitialDataLoaded } = useAppContext();
@@ -133,9 +146,26 @@ export function SettingsForm() {
                 </div>
                 <div>
                   <Label htmlFor="adminSidebarLogoColor" className="mb-1.5 block">Admin Sidebar Logo Color</Label>
-                  <Input id="adminSidebarLogoColor" {...register('adminSidebarLogoColor')} placeholder="e.g., text-blue-500" />
+                  <Controller
+                    name="adminSidebarLogoColor"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value || ""} disabled={isSubmitting}>
+                        <SelectTrigger className={errors.adminSidebarLogoColor ? 'border-destructive' : ''}>
+                          <SelectValue placeholder="Select a color" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sidebarLogoColorOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   {errors.adminSidebarLogoColor && <p className="text-sm text-destructive mt-1">{errors.adminSidebarLogoColor.message}</p>}
-                  <p className="text-xs text-muted-foreground mt-1">Enter a Tailwind CSS class (e.g., text-red-500, text-sidebar-foreground). Leave blank for default.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Choose a color for the logo in the admin sidebar. "Default" uses the theme-defined color.</p>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -257,3 +287,5 @@ export function SettingsForm() {
     </form>
   );
 }
+
+    
