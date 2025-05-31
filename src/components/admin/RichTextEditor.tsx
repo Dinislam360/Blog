@@ -1,7 +1,8 @@
 
 'use client';
 
-import type { FC, useCallback } from 'react';
+import type { FC } from 'react';
+import { useCallback } from 'react'; // ADDED
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
