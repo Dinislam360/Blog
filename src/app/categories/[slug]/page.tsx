@@ -87,7 +87,7 @@ export default function CategoryPage() {
 function Footer() {
   const { siteSettings, isInitialDataLoaded } = useAppContext();
   const defaultCopyright = `© ${new Date().getFullYear()} ${siteSettings.siteTitle || 'Apex Blogs'}. All rights reserved.`;
-  const defaultTagline = 'Powered by Next.js & ShadCN UI';
+  const defaultTagline = ''; // Removed "Powered by Next.js & ShadCN UI"
 
   const copyrightText = isInitialDataLoaded && siteSettings.footerCopyright ? siteSettings.footerCopyright : defaultCopyright;
   const taglineText = isInitialDataLoaded && siteSettings.footerTagline ? siteSettings.footerTagline : defaultTagline;
@@ -123,3 +123,5 @@ function Footer() {
     </footer>
   );
 }
+
+    
