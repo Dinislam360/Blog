@@ -20,6 +20,7 @@ interface AppContextType {
   getCategoryById: (id: string) => Category | undefined;
   getCategoryBySlug: (slug: string) => Category | undefined;
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
+  isInitialDataLoaded: boolean; // To indicate if localStorage has been checked
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -29,83 +30,87 @@ const CATEGORIES_STORAGE_KEY = 'apex_blogs_categories';
 const SETTINGS_STORAGE_KEY = 'apex_blogs_settings';
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [posts, setPosts] = useState<Post[]>(() => {
+  // Initialize state directly with mockData for SSR and initial client render consistency
+  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(mockSiteSettings);
+  const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
+
+  // Effect to load data from localStorage on the client after initial hydration
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
         const storedPosts = localStorage.getItem(POSTS_STORAGE_KEY);
-        return storedPosts ? JSON.parse(storedPosts) : mockPosts;
+        if (storedPosts) {
+          setPosts(JSON.parse(storedPosts));
+        }
       } catch (error) {
         console.warn("Error reading posts from localStorage:", error);
-        return mockPosts;
+        // Silently uses mockPosts if error
       }
-    }
-    return mockPosts;
-  });
 
-  const [categories, setCategories] = useState<Category[]>(() => {
-    if (typeof window !== 'undefined') {
       try {
         const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-        return storedCategories ? JSON.parse(storedCategories) : mockCategories;
+        if (storedCategories) {
+          setCategories(JSON.parse(storedCategories));
+        }
       } catch (error) {
         console.warn("Error reading categories from localStorage:", error);
-        return mockCategories;
+        // Silently uses mockCategories if error
       }
-    }
-    return mockCategories;
-  });
 
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
-     if (typeof window !== 'undefined') {
       try {
         const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-        return storedSettings ? JSON.parse(storedSettings) : mockSiteSettings;
+        if (storedSettings) {
+          setSiteSettings(JSON.parse(storedSettings));
+        }
       } catch (error) {
         console.warn("Error reading site settings from localStorage:", error);
-        return mockSiteSettings;
+        // Silently uses mockSiteSettings if error
       }
+      setIsInitialDataLoaded(true); // Mark that loading attempt is complete
     }
-    return mockSiteSettings;
-  });
+  }, []); // Empty dependency array ensures this runs once on mount (client-side)
 
+  // Effects to save data to localStorage when it changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && isInitialDataLoaded) { // Only save after initial load from storage
       try {
         localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
       } catch (error) {
         console.warn("Error writing posts to localStorage:", error);
       }
     }
-  }, [posts]);
+  }, [posts, isInitialDataLoaded]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && isInitialDataLoaded) { // Only save after initial load from storage
       try {
         localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
       } catch (error) {
         console.warn("Error writing categories to localStorage:", error);
       }
     }
-  }, [categories]);
+  }, [categories, isInitialDataLoaded]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && isInitialDataLoaded) { // Only save after initial load from storage
       try {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(siteSettings));
       } catch (error) {
         console.warn("Error writing site settings to localStorage:", error);
       }
     }
-  }, [siteSettings]);
+  }, [siteSettings, isInitialDataLoaded]);
 
 
   const addPost = (postData: Omit<Post, 'id' | 'slug' | 'createdAt' | 'updatedAt'>): Post => {
     const newPost: Post = {
-      id: String(Date.now() + Math.random()), // Ensure ID is generated first
+      id: String(Date.now() + Math.random()), 
       slug: generateSlug(postData.title),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      ...postData, // Spread postData after defaults to allow overriding if needed (though not for these fields)
+      ...postData, 
     };
     setPosts(prevPosts => [newPost, ...prevPosts]);
     return newPost;
@@ -158,6 +163,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         getCategoryById,
         getCategoryBySlug,
         updateSiteSettings,
+        isInitialDataLoaded,
       }}
     >
       {children}
@@ -172,3 +178,4 @@ export const useAppContext = () => {
   }
   return context;
 };
+
