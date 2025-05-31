@@ -134,5 +134,16 @@ body {
 .ProseMirror h2 { @apply text-xl; }
 .ProseMirror h3 { @apply text-lg; }
 
+/* Styles for Tiptap CodeBlock with lowlight */
+.ProseMirror pre {
+  @apply bg-muted text-muted-foreground font-mono text-sm p-4 rounded-md overflow-x-auto my-4;
+}
+
+.ProseMirror pre code {
+  @apply font-mono text-sm;
+  /* lowlight will add its own span classes for syntax highlighting */
+  /* Example: .hljs-keyword, .hljs-string, etc. */
+}
+
 /* General prose styles for rendered content are in page.tsx/slug.tsx via className="prose..." */
 /* These ensure editor has consistent look & feel for block elements like lists/quotes */

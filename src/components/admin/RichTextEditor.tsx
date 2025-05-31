@@ -1,11 +1,20 @@
 
 'use client';
 
-import type { FC } from 'react';
+import type { FC, useCallback } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, Pilcrow, List, ListOrdered, Undo, Redo, Quote } from 'lucide-react';
+import LinkExtension from '@tiptap/extension-link';
+import ImageExtension from '@tiptap/extension-image';
+import CodeBlockLowlightExtension from '@tiptap/extension-code-block-lowlight';
+import { lowlight } from 'lowlight/lib/common'; // For common languages
+// To add all languages: import { lowlight } from 'lowlight';
+// To add specific languages: import { lowlight } from 'lowlight/lib/core';
+// import javascript from 'highlight.js/lib/languages/javascript';
+// lowlight.registerLanguage('javascript', javascript);
+
+import { Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, Pilcrow, List, ListOrdered, Undo, Redo, Quote, Link, Unlink, ImageIcon, CodeXml } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +28,27 @@ const TiptapToolbar: FC<{ editor: Editor | null }> = ({ editor }) => {
   if (!editor) {
     return null;
   }
+
+  const setLink = useCallback(() => {
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('URL', previousUrl);
+
+    if (url === null) {
+      return;
+    }
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editor]);
+
+  const addImage = useCallback(() => {
+    const url = window.prompt('Image URL');
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  }, [editor]);
 
   return (
     <div className="flex flex-wrap gap-1 border border-input bg-transparent p-2 rounded-t-md">
@@ -52,6 +82,44 @@ const TiptapToolbar: FC<{ editor: Editor | null }> = ({ editor }) => {
       >
         <Strikethrough className="h-4 w-4" />
       </Button>
+      <Button
+        type="button"
+        variant={editor.isActive('link') ? 'secondary' : 'ghost'}
+        size="icon"
+        onClick={setLink}
+        title="Set Link (Ctrl+K)"
+      >
+        <Link className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => editor.chain().focus().unsetLink().run()}
+        disabled={!editor.isActive('link')}
+        title="Unset Link"
+      >
+        <Unlink className="h-4 w-4" />
+      </Button>
+       <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={addImage}
+        title="Insert Image"
+      >
+        <ImageIcon className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        variant={editor.isActive('codeBlock') ? 'secondary' : 'ghost'}
+        size="icon"
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        title="Code Block (Ctrl+Alt+C)"
+      >
+        <CodeXml className="h-4 w-4" />
+      </Button>
+      <span className="border-l border-input mx-1 h-auto"></span>
       <Button
         type="button"
         variant={editor.isActive('heading', { level: 1 }) ? 'secondary' : 'ghost'}
@@ -115,6 +183,7 @@ const TiptapToolbar: FC<{ editor: Editor | null }> = ({ editor }) => {
       >
         <Quote className="h-4 w-4" />
       </Button>
+       <span className="border-l border-input mx-1 h-auto"></span>
       <Button
         type="button"
         variant="ghost"
@@ -144,11 +213,33 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({ value, onChange, disab
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Configure heading levels if needed, e.g., heading: { levels: [1, 2, 3] }
-        // Disable specific nodes/marks if necessary, e.g. codeBlock: false,
+        codeBlock: false, // Handled by CodeBlockLowlightExtension
       }),
       Placeholder.configure({
         placeholder: 'Write your blog post content here...',
+      }),
+      LinkExtension.configure({
+        openOnClick: false, // opens link editor, not the link itself
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          rel: 'noopener noreferrer nofollow', // Good security practice for user-generated links
+          target: '_blank',
+        },
+      }),
+      ImageExtension.configure({
+        inline: false, // block image
+        allowBase64: false, // For security and performance, disallow base64 images.
+        HTMLAttributes: {
+            class: 'max-w-full h-auto rounded-md my-4', // Style images within content
+        },
+      }),
+      CodeBlockLowlightExtension.configure({
+        lowlight,
+        defaultLanguage: 'plaintext',
+        HTMLAttributes: {
+            class: 'rounded-md text-sm my-4', // Style code blocks
+        },
       }),
     ],
     content: value,
@@ -159,9 +250,9 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({ value, onChange, disab
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm sm:prose-base dark:prose-invert max-w-none', // Tailwind prose classes for styling editor content
+          'prose prose-sm sm:prose-base dark:prose-invert max-w-none',
           'min-h-[250px] w-full rounded-b-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
-          'border-t-0' // Remove top border as toolbar has bottom border
+          'border-t-0'
         ),
       },
     },
