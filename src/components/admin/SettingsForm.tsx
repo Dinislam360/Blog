@@ -141,10 +141,6 @@ export function SettingsForm() {
                   <Label htmlFor="footerCopyright" className="mb-1.5 block">Footer Copyright Text</Label>
                   <Input id="footerCopyright" {...register('footerCopyright')} placeholder={`© ${new Date().getFullYear()} Your Site Name`} />
                 </div>
-                <div>
-                  <Label htmlFor="footerTagline" className="mb-1.5 block">Footer Tagline</Label>
-                  <Input id="footerTagline" {...register('footerTagline')} placeholder="A catchy phrase about your site" />
-                </div>
               </AccordionContent>
             </AccordionItem>
 
@@ -255,3 +251,5 @@ export function SettingsForm() {
     </form>
   );
 }
+
+    
