@@ -4,13 +4,53 @@ import { useParams, notFound } from 'next/navigation';
 import { useAppContext } from '@/contexts/AppContext';
 import { Navbar } from '@/components/Navbar';
 import { PostCard } from '@/components/PostCard';
-import type { Post } from '@/types';
+import type { Post, SocialLink } from '@/types'; // Added SocialLink
+import Link from 'next/link';
+import { Twitter, Github, Linkedin, Facebook, Instagram, Youtube, ExternalLink } from 'lucide-react'; // Add more as needed
+
+
+// Helper to get appropriate Lucide icon
+const getSocialIcon = (platform: string) => {
+  const lowerPlatform = platform.toLowerCase();
+  if (lowerPlatform.includes('twitter')) return <Twitter className="h-5 w-5" />;
+  if (lowerPlatform.includes('github')) return <Github className="h-5 w-5" />;
+  if (lowerPlatform.includes('linkedin')) return <Linkedin className="h-5 w-5" />;
+  if (lowerPlatform.includes('facebook')) return <Facebook className="h-5 w-5" />;
+  if (lowerPlatform.includes('instagram')) return <Instagram className="h-5 w-5" />;
+  if (lowerPlatform.includes('youtube')) return <Youtube className="h-5 w-5" />;
+  return <ExternalLink className="h-5 w-5" />; // Default icon
+};
+
 
 export default function CategoryPage() {
   const params = useParams();
   const slug = typeof params.slug === 'string' ? params.slug : '';
-  const { posts, categories, getCategoryBySlug } = useAppContext();
+  const { posts, categories, getCategoryBySlug, isInitialDataLoaded } = useAppContext();
 
+
+  if (!isInitialDataLoaded) {
+    // Basic loading state, can be enhanced with skeletons
+    return (
+       <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 flex-grow">
+            <div className="h-10 w-1/3 bg-muted rounded animate-pulse mb-8 pb-4 border-b"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1,2,3].map(i => (
+                    <div key={i} className="bg-card p-4 rounded-lg shadow-md animate-pulse">
+                        <div className="h-48 bg-muted rounded mb-4"></div>
+                        <div className="h-6 w-3/4 bg-muted rounded mb-2"></div>
+                        <div className="h-4 w-1/2 bg-muted rounded mb-4"></div>
+                        <div className="h-10 w-full bg-muted rounded"></div>
+                    </div>
+                ))}
+            </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  
   const category = getCategoryBySlug(slug);
 
   if (!category) {
@@ -44,10 +84,37 @@ export default function CategoryPage() {
 }
 
 function Footer() {
+  const { siteSettings, isInitialDataLoaded } = useAppContext();
+  const defaultCopyright = `© ${new Date().getFullYear()} Apex Blogs. All rights reserved.`;
+  const defaultTagline = 'Powered by Next.js & ShadCN UI';
+
+  const copyrightText = isInitialDataLoaded && siteSettings.footerCopyright ? siteSettings.footerCopyright : defaultCopyright;
+  const taglineText = isInitialDataLoaded && siteSettings.footerTagline ? siteSettings.footerTagline : defaultTagline;
+  const socialLinks = isInitialDataLoaded ? (siteSettings.socialLinks || []) : [];
+
+
   return (
     <footer className="py-8 border-t bg-muted/50">
       <div className="container mx-auto px-4 text-center text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Apex Blogs. All rights reserved.</p>
+        <p>{copyrightText}</p>
+        {taglineText && <p className="text-sm mt-1">{taglineText}</p>}
+         {socialLinks.length > 0 && (
+          <div className="flex justify-center space-x-4 mt-4">
+            {socialLinks.map((link: SocialLink) => (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={link.platform}
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                {getSocialIcon(link.platform)}
+                <span className="sr-only">{link.platform}</span>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </footer>
   );

@@ -19,7 +19,20 @@ export interface Post {
   updatedAt: string; // ISO date string
 }
 
+export interface SocialLink {
+  id: string;
+  platform: string;
+  url: string;
+  icon?: string; // Optional: for future icon mapping
+}
+
 export interface SiteSettings {
+  siteTitle?: string;
+  logoUrl?: string;
+  faviconUrl?: string; // URL for the favicon
+  footerCopyright?: string;
+  footerTagline?: string;
+  socialLinks?: SocialLink[];
   adSenseHeader?: string;
   adSenseFooter?: string;
   adSenseSidebar?: string;

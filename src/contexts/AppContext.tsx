@@ -2,7 +2,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Post, Category, SiteSettings } from '@/types';
 import { mockPosts, mockCategories, mockSiteSettings } from '@/lib/mock-data';
 import { generateSlug } from '@/lib/utils';
@@ -13,7 +13,7 @@ interface AppContextType {
   siteSettings: SiteSettings;
   addPost: (post: Omit<Post, 'id' | 'slug' | 'createdAt' | 'updatedAt'>) => Post;
   updatePost: (post: Post) => void;
-  deletePost: (postId: string) => void; // Added deletePost
+  deletePost: (postId: string) => void;
   getPostById: (id: string) => Post | undefined;
   getPostBySlug: (slug: string) => Post | undefined;
   addCategory: (category: Omit<Category, 'id' | 'slug'>) => Category;
@@ -26,55 +26,72 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const POSTS_STORAGE_KEY = 'apex_blogs_posts';
-const CATEGORIES_STORAGE_KEY = 'apex_blogs_categories';
-const SETTINGS_STORAGE_KEY = 'apex_blogs_settings';
+const POSTS_STORAGE_KEY = 'apex_blogs_posts_v2'; // increment version if schema changes significantly
+const CATEGORIES_STORAGE_KEY = 'apex_blogs_categories_v2';
+const SETTINGS_STORAGE_KEY = 'apex_blogs_settings_v2';
+
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(mockSiteSettings);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(mockSiteSettings); // Initialize with mock as base
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
+
+  const loadFromLocalStorage = useCallback(() => {
+    let loadedPosts = mockPosts;
+    let loadedCategories = mockCategories;
+    let loadedSettings = { ...mockSiteSettings }; // Start with mock, then overlay stored
+
+    try {
+      const storedPosts = localStorage.getItem(POSTS_STORAGE_KEY);
+      if (storedPosts) {
+        loadedPosts = JSON.parse(storedPosts);
+      }
+    } catch (error) {
+      console.warn("Error reading posts from localStorage:", error);
+      // Fallback to mock if parsing fails
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(mockPosts));
+    }
+    setPosts(loadedPosts);
+
+    try {
+      const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+      if (storedCategories) {
+        loadedCategories = JSON.parse(storedCategories);
+      }
+    } catch (error) {
+      console.warn("Error reading categories from localStorage:", error);
+      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(mockCategories));
+    }
+    setCategories(loadedCategories);
+    
+    try {
+      const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (storedSettings) {
+        // Merge stored settings with mock settings to ensure new fields have defaults
+        loadedSettings = { ...mockSiteSettings, ...JSON.parse(storedSettings) };
+      }
+    } catch (error) {
+      console.warn("Error reading site settings from localStorage:", error);
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(mockSiteSettings));
+    }
+    setSiteSettings(loadedSettings);
+
+    setIsInitialDataLoaded(true); 
+  }, []);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      let loadedPosts = mockPosts;
-      let loadedCategories = mockCategories;
-      let loadedSettings = mockSiteSettings;
-
-      try {
-        const storedPosts = localStorage.getItem(POSTS_STORAGE_KEY);
-        if (storedPosts) {
-          loadedPosts = JSON.parse(storedPosts);
-        }
-      } catch (error) {
-        console.warn("Error reading posts from localStorage:", error);
-      }
-      setPosts(loadedPosts);
-
-      try {
-        const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-        if (storedCategories) {
-          loadedCategories = JSON.parse(storedCategories);
-        }
-      } catch (error) {
-        console.warn("Error reading categories from localStorage:", error);
-      }
-      setCategories(loadedCategories);
-      
-      try {
-        const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-        if (storedSettings) {
-          loadedSettings = JSON.parse(storedSettings);
-        }
-      } catch (error) {
-        console.warn("Error reading site settings from localStorage:", error);
-      }
-      setSiteSettings(loadedSettings);
-
-      setIsInitialDataLoaded(true); 
+      // Initialize with mock data first to prevent hydration mismatch
+      setPosts(mockPosts);
+      setCategories(mockCategories);
+      setSiteSettings(mockSiteSettings);
+      // Then, load from localStorage after the initial client render
+      loadFromLocalStorage();
     }
-  }, []); 
+  }, [loadFromLocalStorage]);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined' && isInitialDataLoaded) { 
@@ -115,13 +132,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       updatedAt: new Date().toISOString(),
       ...postData, 
     };
-    setPosts(prevPosts => [newPost, ...prevPosts]);
+    setPosts(prevPosts => [newPost, ...prevPosts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     return newPost;
   };
 
   const updatePost = (updatedPost: Post) => {
     setPosts(prevPosts =>
       prevPosts.map(p => (p.id === updatedPost.id ? { ...updatedPost, slug: generateSlug(updatedPost.title), updatedAt: new Date().toISOString() } : p))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     );
   };
 
@@ -163,7 +181,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         siteSettings,
         addPost,
         updatePost,
-        deletePost, // Added deletePost
+        deletePost,
         getPostById,
         getPostBySlug,
         addCategory,
@@ -186,4 +204,3 @@ export const useAppContext = () => {
   }
   return context;
 };
-
