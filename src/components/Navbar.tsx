@@ -58,7 +58,8 @@ export function Navbar() {
 
   const navItems = [
     { title: 'Home', href: '/' },
-    ...categories.slice(0, 3).map(cat => ({ title: cat.name, href: `/categories/${cat.slug}` })),
+    // Display all categories
+    ...categories.map(cat => ({ title: cat.name, href: `/categories/${cat.slug}` })),
   ];
 
   const handleResultClick = () => {
