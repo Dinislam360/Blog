@@ -55,11 +55,9 @@ export default function PostPage() {
           
           <Separator className="my-6" />
 
-          {/* Using a div with dangerouslySetInnerHTML for mock HTML content. 
-              In a real app, sanitize this or use a markdown parser. */}
           <div
             className="prose prose-lg max-w-none dark:prose-invert" 
-            dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }} 
+            dangerouslySetInnerHTML={{ __html: post.content }} 
           />
           
           {post.seoKeywords && (
@@ -91,4 +89,3 @@ function Footer() {
     </footer>
   );
 }
-

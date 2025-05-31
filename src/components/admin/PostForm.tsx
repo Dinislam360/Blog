@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,10 +23,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { RichTextEditor } from './RichTextEditor'; // ADDED
+import { Textarea } from '@/components/ui/textarea';
+
 
 const postSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters long'),
-  content: z.string().min(10, 'Content must be at least 10 characters long'),
+  content: z.string().min(10, 'Content must be at least 10 characters long (HTML content)'),
   featuredImage: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   dataAiHint: z.string().max(50, "AI hint should be concise (max 50 chars).").optional(),
   categoryId: z.string().min(1, 'Category is required'),
@@ -92,14 +94,23 @@ export function PostForm({ post }: PostFormProps) {
   };
 
   const handleGenerateSeo = async () => {
-    const content = watch('content');
-    if (!content || content.length < 50) {
+    const content = watch('content'); // This will be HTML content
+    // For AI, we might want to strip HTML or use a library to get text content
+    // For simplicity, we'll send HTML for now, or we can use editor.getText() if we had access to editor instance
+    if (!content || content.length < 50) { // Check HTML length, might need adjustment
       toast({ title: "Content too short", description: "Please write at least 50 characters of content to generate SEO suggestions.", variant: "destructive" });
       return;
     }
     setIsGeneratingSeo(true);
     try {
-      const input: GenerateSEOTitlesInput = { content };
+      // Consider stripping HTML from 'content' before sending to AI if it expects plain text
+      const plainTextContent = new DOMParser().parseFromString(content, "text/html").body.textContent || "";
+      if (plainTextContent.length < 50) {
+        toast({ title: "Text Content too short", description: "Please write at least 50 characters of actual text content.", variant: "destructive" });
+        setIsGeneratingSeo(false);
+        return;
+      }
+      const input: GenerateSEOTitlesInput = { content: plainTextContent };
       const result = await generateSEOTitles(input);
       setSeoSuggestions(result);
       setIsSeoModalOpen(true);
@@ -134,18 +145,21 @@ export function PostForm({ post }: PostFormProps) {
 
             <div>
               <Label htmlFor="content">Content</Label>
-              <Textarea
-                id="content"
-                {...register('content')}
-                placeholder="Write your blog post content here... Markdown is not supported in this basic editor. Plain text only."
-                rows={10}
-                className={errors.content ? 'border-destructive' : ''}
+               <Controller
+                name="content"
+                control={control}
+                render={({ field }) => (
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
-              <p className="text-xs text-muted-foreground mt-1">A rich text editor (e.g., Tiptap, Quill) can be integrated here for better formatting options.</p>
               {errors.content && <p className="text-sm text-destructive mt-1">{errors.content.message}</p>}
             </div>
 
-            <Button type="button" variant="outline" onClick={handleGenerateSeo} disabled={isGeneratingSeo}>
+            <Button type="button" variant="outline" onClick={handleGenerateSeo} disabled={isGeneratingSeo || isSubmitting}>
               {isGeneratingSeo ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Generate SEO Suggestions (AI)
             </Button>
@@ -194,7 +208,7 @@ export function PostForm({ post }: PostFormProps) {
                 name="categoryId"
                 control={control}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                     <SelectTrigger className={errors.categoryId ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
@@ -221,19 +235,19 @@ export function PostForm({ post }: PostFormProps) {
           <CardContent className="space-y-6">
             <div>
               <Label htmlFor="seoKeywords">SEO Keywords</Label>
-              <Input id="seoKeywords" {...register('seoKeywords')} placeholder="e.g., tech, programming, nextjs" />
+              <Input id="seoKeywords" {...register('seoKeywords')} placeholder="e.g., tech, programming, nextjs" disabled={isSubmitting}/>
               <p className="text-xs text-muted-foreground mt-1">Comma-separated keywords.</p>
             </div>
 
             <div>
               <Label htmlFor="seoDescription">SEO Description</Label>
-              <Textarea id="seoDescription" {...register('seoDescription')} placeholder="A brief description for search engines." rows={3} />
+              <Textarea id="seoDescription" {...register('seoDescription')} placeholder="A brief description for search engines." rows={3} disabled={isSubmitting} />
             </div>
           </CardContent>
         </Card>
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>Cancel</Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {post ? 'Update Post' : 'Create Post'}

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -92,3 +93,46 @@ body {
     flex-grow: 1;
   }
 }
+
+/* Tiptap editor specific styles */
+.ProseMirror {
+  /* Base styles are applied via editorProps.attributes.class in RichTextEditor.tsx */
+  /* Ensure Tailwind prose styles apply correctly if needed, or add specifics here */
+}
+
+.ProseMirror:focus {
+  outline: none; /* Focus ring handled by the wrapper div with focus-visible:ring-ring */
+}
+
+/* Styling for Tiptap placeholder extension */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  height: 0;
+}
+
+/* Ensure lists and blockquotes look decent within the editor input area */
+.ProseMirror ul,
+.ProseMirror ol {
+  @apply list-inside my-2 pl-4;
+}
+.ProseMirror ul {
+  @apply list-disc;
+}
+.ProseMirror ol {
+  @apply list-decimal;
+}
+.ProseMirror blockquote {
+  @apply my-2 border-l-4 border-input pl-4 italic; /* Use border-input to match form fields */
+}
+.ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6 {
+  @apply my-2 font-semibold leading-tight;
+}
+.ProseMirror h1 { @apply text-2xl; }
+.ProseMirror h2 { @apply text-xl; }
+.ProseMirror h3 { @apply text-lg; }
+
+/* General prose styles for rendered content are in page.tsx/slug.tsx via className="prose..." */
+/* These ensure editor has consistent look & feel for block elements like lists/quotes */
