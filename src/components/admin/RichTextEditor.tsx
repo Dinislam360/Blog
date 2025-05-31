@@ -8,11 +8,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import LinkExtension from '@tiptap/extension-link';
 import ImageExtension from '@tiptap/extension-image';
 import CodeBlockLowlightExtension from '@tiptap/extension-code-block-lowlight';
-import { lowlight } from 'lowlight/lib/common'; // For common languages
-// To add all languages: import { lowlight } from 'lowlight';
-// To add specific languages: import { lowlight } from 'lowlight/lib/core';
-// import javascript from 'highlight.js/lib/languages/javascript';
-// lowlight.registerLanguage('javascript', javascript);
+import { createLowlight, common as commonLanguages } from 'lowlight'; // For common languages dataset
 
 import { Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, Pilcrow, List, ListOrdered, Undo, Redo, Quote, Link, Unlink, ImageIcon, CodeXml } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -235,7 +231,7 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({ value, onChange, disab
         },
       }),
       CodeBlockLowlightExtension.configure({
-        lowlight,
+        lowlight: createLowlight(commonLanguages),
         defaultLanguage: 'plaintext',
         HTMLAttributes: {
             class: 'rounded-md text-sm my-4', // Style code blocks
@@ -251,7 +247,7 @@ export const RichTextEditor: FC<RichTextEditorProps> = ({ value, onChange, disab
       attributes: {
         class: cn(
           'prose prose-sm sm:prose-base dark:prose-invert max-w-none',
-          'min-h-[250px] w-full rounded-b-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
+          'min-h-[250px] w-full rounded-b-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
           'border-t-0'
         ),
       },
